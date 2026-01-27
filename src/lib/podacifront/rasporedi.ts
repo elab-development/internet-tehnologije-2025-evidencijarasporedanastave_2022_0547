@@ -27,5 +27,23 @@ export const rasporedi: Raspored[] = [
         nastavni_dan: "RADNI",
         predmetId: 103,
         kalendarId: 202
-    }
+    },
+    {
+        id: 4,
+        dan_u_nedelji: "Utorak",
+        vreme_pocetka: "20:15",
+        vreme_zavrsetka: "22:00",
+        nastavni_dan: "RADNI",
+        predmetId: 102,
+        kalendarId: 202
+    },
+    {
+        id: 5,
+        dan_u_nedelji: "Utorak",
+        vreme_pocetka: "22:15",
+        vreme_zavrsetka: "23:00",
+        nastavni_dan: "RADNI",
+        predmetId: 101,
+        kalendarId: 202
+    },
 ];
