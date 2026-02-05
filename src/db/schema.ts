@@ -17,9 +17,9 @@ export const korisnik = pgTable('korisnik', {
 export const predmet = pgTable('predmet', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
   naziv: varchar('naziv', { length: 255 }).notNull(),
-  // Slug za predmet (npr. osnove-ekonomije)
   slug: varchar('slug', { length: 255 }).notNull().unique(),
-  opis: varchar('opis', { length: 1000 }),
+  // IZMENI OVU LINIJU (dodaj .notNull() i promeni length na 500):
+  opis: varchar('opis', { length: 500 }).notNull(), 
   createdAt: timestamp('created_at').default(sql`now()`).notNull(),
 });
 
@@ -50,6 +50,7 @@ export const prisustvo = pgTable('prisustvo', {
 }, (t) => ({
   pk: primaryKey({ columns: [t.korisnikId, t.rasporedId, t.datumPrisustva] }),
 }));
+
 
 // --- RELACIJE ---
 
