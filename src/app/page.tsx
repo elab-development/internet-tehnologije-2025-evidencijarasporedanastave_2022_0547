@@ -1,73 +1,20 @@
-"use client";
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-
+import { db } from "@/db";
+import { korisnik } from "@/db/schema";
+import { dodajKorisnika } from "./actions"; // Uvezi akciju koju smo napravili
 import Navbar from '../components/navbar';
 import StatCard from '../components/statcard';
 import CustomButton from '../components/CustomButton';
-import { korisnici } from '../lib/podacifront/korisnici';
-import { prisustva } from '../lib/podacifront/prisustva';
-import { rasporedi } from '../lib/podacifront/rasporedi';
-import { predmeti } from '../lib/podacifront/predmeti';
 
-export default function HomePage() {
-  const router = useRouter();
-  
-  // 1. Podaci o ulogovanom korisniku 
-  const ulogovanKorisnik = korisnici.find(k => k.id === 3) || korisnici[2];
+// Pošto koristimo bazu, Home postaje asinhrona Server Komponenta
+export default async function HomePage() {
+  // 1. Povuci prave korisnike iz baze
+  const sviKorisniciIzBaze = await db.select().from(korisnik);
 
-  // --- STATES ZA FUNKCIONALNOSTI ---
-  const [procenatPrisustva, setProcenatPrisustva] = useState<number>(0);
-  const [brojPredmetaDanas, setBrojPredmetaDanas] = useState<number>(0);
-  const [sledeciPredmetInfo, setSledeciPredmetInfo] = useState<string>("Nema više predavanja");
-  const [statusNaloga, setStatusNaloga] = useState<{ tekst: string, boja: string }>({ 
-    tekst: "PROVERA...", 
-    boja: "text-slate-500" 
-  });
-
-  useEffect(() => {
-    // --- FUNKCIONALNOST 1: Kalkulacija procenta prisustva iz modela ---
-    // Filtriramo prisustva samo za Nikolu (id: 3)
-    const mojaPrisustva = prisustva.filter(p => p.korisnikId === ulogovanKorisnik.id);
-    const brojPrisutan = mojaPrisustva.filter(p => p.status === "PRISUTAN").length;
-    
-    const procenat = mojaPrisustva.length > 0 
-      ? Math.round((brojPrisutan / mojaPrisustva.length) * 100) 
-      : 0;
-    
-    setProcenatPrisustva(procenat);
-
-    // --- FUNKCIONALNOST 2: Određivanje statusa naloga na osnovu podataka ---
-    if (procenat >= 90) {
-        setStatusNaloga({ tekst: "ODLIČAN", boja: "text-green-600" });
-    } else if (procenat >= 50) {
-        setStatusNaloga({ tekst: "AKTIVAN", boja: "text-blue-600" });
-    } else {
-        setStatusNaloga({ tekst: "KRITIČAN", boja: "text-red-600" });
-    }
-
-    // --- FUNKCIONALNOST 3: Obrada rasporeda za današnji dan ---
-    const daniUNedelji = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"];
-    const danasnjiDanIme = daniUNedelji[new Date().getDay()];
-
-    // Filtriramo raspored za danas
-    const danasnjiRaspored = rasporedi.filter(r => r.dan_u_nedelji === danasnjiDanIme);
-    setBrojPredmetaDanas(danasnjiRaspored.length);
-
-    // Pronalazimo naziv sledećeg predmeta spajanjem 'rasporedi' i 'predmeti'
-    if (danasnjiRaspored.length > 0) {
-        const prviSledeci = danasnjiRaspored[0];
-        const predmetPodaci = predmeti.find(p => p.id === prviSledeci.predmetId);
-        if (predmetPodaci) {
-            setSledeciPredmetInfo(`${predmetPodaci.naziv} u ${prviSledeci.vreme_pocetka}h`);
-        }
-    }
-  }, [ulogovanKorisnik.id]);
+  // 2. Privremeno simuliramo ulogovanog (dok ne napraviš Auth)
+  const ulogovanKorisnik = sviKorisniciIzBaze[0] || { ime: "Gost", role: "guest" };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      
       <Navbar userName={ulogovanKorisnik.ime} />
 
       <main className="max-w-6xl mx-auto px-6 py-16">
@@ -76,46 +23,55 @@ export default function HomePage() {
             {ulogovanKorisnik.role} Dashboard
           </span>
           <h1 className="text-5xl font-black text-slate-900 mt-6 tracking-tight">
-            Dobrodošli nazad, <span className="text-blue-600">{ulogovanKorisnik.ime.split(' ')[0]}</span>!
+            Sistem je <span className="text-green-600">Povezan</span>!
           </h1>
-          <p className="text-slate-500 mt-4 text-lg max-w-2xl mx-auto">
-            Vaš centralni sistem za evidenciju prisustva na FON-u.
-          </p>
         </div>
 
-    
-        <div className="flex flex-wrap justify-center gap-6 mb-20">
-          <StatCard 
-            title="Predmeti Danas" 
-            value={brojPredmetaDanas.toString()} 
-            description={sledeciPredmetInfo} 
-          />
-          <StatCard 
-            title="Ukupno Prisustvo" 
-            value={`${procenatPrisustva}%`} 
-            description={procenatPrisustva > 80 ? "Odličan prosek!" : "Pratite predavanja redovnije."} 
-          />
-          <StatCard 
-            title="Status Naloga" 
-            value={statusNaloga.tekst} 
-            description="Zimski semestar 2024" 
-          />
+        {/* TEST FORMA ZA BAZU - Integrisana u dizajn */}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-10">
+          <h2 className="text-xl font-bold mb-4">Dodaj novog korisnika u bazu:</h2>
+          <form action={dodajKorisnika} className="flex gap-4">
+            <input 
+              name="ime" 
+              className="border p-2 rounded-lg flex-1" 
+              placeholder="Ime i prezime" 
+              required 
+            />
+            <input 
+              name="email" 
+              type="email" 
+              className="border p-2 rounded-lg flex-1" 
+              placeholder="Email" 
+              required 
+            />
+            <button 
+              type="submit" 
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Upiši u Postgres
+            </button>
+          </form>
         </div>
 
-       
+        {/* LISTA KORISNIKA IZ PRAVE BAZE */}
+        <div className="grid gap-4 mb-10">
+          <h2 className="text-2xl font-bold text-slate-800">Korisnici u PostgreSQL bazi:</h2>
+          {sviKorisniciIzBaze.map((u) => (
+            <div key={u.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex justify-between">
+              <span><strong>{u.ime}</strong> ({u.email})</span>
+              <span className="text-slate-400 text-sm">Slug: {u.slug}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* TVOJ POSTOJEĆI DIZAJN DUGMETA */}
         <div className="bg-white border border-slate-200 rounded-[2rem] p-12 text-center shadow-2xl shadow-blue-100/50 relative overflow-hidden">
           <div className="relative z-10">
-            <h3 className="text-3xl font-bold text-slate-800 mb-4">Vreme je za nastavu?</h3>
+            <h3 className="text-3xl font-bold text-slate-800 mb-4">Sve radi kako treba?</h3>
             <p className="text-slate-500 mb-10 max-w-md mx-auto text-lg">
-              Pregledajte vaš kompletan nedeljni raspored i evidentirajte prisustvo.
+              Ako vidiš imena iznad, tvoj Next.js backend uspešno komunicira sa Docker bazom.
             </p>
-            <CustomButton 
-              label="Otvori kalendar nastave →" 
-              onClick={() => router.push('/kalendar')} 
-            />
           </div>
-          
-          <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
         </div>
       </main>
     </div>
