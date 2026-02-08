@@ -22,3 +22,15 @@ export async function dodajKorisnika(formData: FormData) {
   // Osvežava stranicu da bismo videli novog korisnika
   revalidatePath("/");
 }
+
+const handleLogout = async (router: any) => {
+  try {
+    const res = await fetch('/api/auth/logout', { method: 'POST' });
+    if (res.ok) {
+      // Vraćamo korisnika na login stranicu
+      router.push('/login');
+    }
+  } catch (error) {
+    console.error('Greška pri odjavi:', error);
+  }
+};

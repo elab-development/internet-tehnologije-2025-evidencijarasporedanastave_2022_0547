@@ -50,3 +50,15 @@ ALTER TABLE "prisustvo" ADD CONSTRAINT "prisustvo_korisnik_id_korisnik_id_fk" FO
 ALTER TABLE "prisustvo" ADD CONSTRAINT "prisustvo_raspored_id_raspored_id_fk" FOREIGN KEY ("raspored_id") REFERENCES "public"."raspored"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "raspored" ADD CONSTRAINT "raspored_predmet_id_predmet_id_fk" FOREIGN KEY ("predmet_id") REFERENCES "public"."predmet"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "raspored" ADD CONSTRAINT "raspored_kalendar_id_kalendar_id_fk" FOREIGN KEY ("kalendar_id") REFERENCES "public"."kalendar"("id") ON DELETE no action ON UPDATE no action;
+
+--> statement-breakpoint
+-- A) DODAVANJE KOLONE: Dodajemo broj kabineta u tabelu raspored
+ALTER TABLE "raspored" ADD COLUMN "kabinet" varchar(50);
+
+--> statement-breakpoint
+-- B) IZMENA POSTOJEĆE KOLONE: Povećavamo dužinu opisa predmeta
+ALTER TABLE "predmet" ALTER COLUMN "opis" SET DATA TYPE varchar(2000);
+
+--> statement-breakpoint
+-- C) POSTAVLJANJE DODATNIH OGRANIČENJA: Osiguravamo da status prisustva ne bude prazan string
+ALTER TABLE "prisustvo" ADD CONSTRAINT "status_provera" CHECK (length(status) > 0);
