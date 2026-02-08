@@ -1,5 +1,5 @@
 import "dotenv/config";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { db } from "./index"; 
 import {
   korisnik,
@@ -12,7 +12,7 @@ import {
 console.log("🌱 Seeding database...");
 
 async function seed() {
-  // Hashujemo lozinku jednom da bismo je koristili za sve test korisnike
+  // Hashujemo lozinku jednom
   const passwordHash = await bcrypt.hash("1233", 10);
 
   await db.transaction(async (tx) => {
@@ -24,9 +24,6 @@ async function seed() {
     await tx.delete(korisnik);
 
     // 2. KORISNICI
-    // =====================
-    // USERS
-    // =====================
     const [admin] = await tx
       .insert(korisnik)
       .values({
@@ -49,13 +46,37 @@ async function seed() {
       })
       .returning();
 
+    // DODATO: Test nastavnik kako bismo povezali predmete
+    const [profesor] = await tx
+      .insert(korisnik)
+      .values({
+        ime: "Dragan Petrović",
+        slug: "dragan-petrovic",
+        email: "dragan@nastavnik.rs",
+        password: passwordHash,
+        role: "nastavnik",
+      })
+      .returning();
+
     // 3. PREDMETI
+    // ISPRAVLJENO: Dodat nastavnikId jer je obavezan u novoj šemi
     const [iteh] = await tx
       .insert(predmet)
       .values({
         naziv: "Internet Tehnologije",
         slug: "internet-tehnologije",
         opis: "Razvoj modernih veb aplikacija",
+        nastavnikId: profesor.id, // Povezujemo predmet sa profesorom
+      })
+      .returning();
+
+    const [prosoft] = await tx
+      .insert(predmet)
+      .values({
+        naziv: "Projektovanje Softvera",
+        slug: "projektovanje-softvera",
+        opis: "Arhitektura i dizajn softverskih sistema",
+        nastavnikId: profesor.id,
       })
       .returning();
 
@@ -63,8 +84,8 @@ async function seed() {
     const [datum] = await tx
       .insert(kalendar)
       .values({
-        datum: "2026-02-05",
-        opis: "Prvi termin nastave",
+        datum: "2026-02-08",
+        opis: "Februarski termin",
       })
       .returning();
 
@@ -72,21 +93,23 @@ async function seed() {
     const [termin] = await tx
       .insert(raspored)
       .values({
-        danUNedelji: "Četvrtak",
-        vremePocetka: "14:15:00",
-        vremeZavrsetka: "17:00:00",
+        danUNedelji: "Nedelja", // Postavio sam Nedelja da bi ti radilo testiranje danas
+        vremePocetka: "14:00:00",
+        vremeZavrsetka: "21:00:00",
         nastavniDan: "Predavanja",
         predmetId: iteh.id,
         kalendarId: datum.id,
+        kabinet: "B001",
       })
       .returning();
 
-    // 6. PRISUSTVO
+    // 6. PRISUSTVO (Inicijalno dodeljujemo termin studentu kao 'Nije prisutan')
+    // ISPRAVLJENO: KorisnikId i RasporedId moraju biti validni UUID-ovi
     await tx.insert(prisustvo).values({
       korisnikId: student.id,
       rasporedId: termin.id,
-      datumPrisustva: "2026-02-05",
-      status: "prisutan",
+      datumPrisustva: "2026-02-08",
+      status: "Nije prisutan", // Početni status pre evidencije
     });
   });
 

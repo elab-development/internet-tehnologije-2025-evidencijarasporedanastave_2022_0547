@@ -12,23 +12,28 @@ const Navbar = ({ userName, userRole }: NavbarProps) => {
   // Normalizujemo ulogu (mala slova i čišćenje razmaka)
   const role = userRole?.toLowerCase().trim();
 
-  // DODAJEMO VIŠE OPCIJA: Proveravamo i 'admin' i 'administrator'
+  // Putanja za početnu stranu
   const homePath = 
     (role === 'student') ? '/student' : 
     (role === 'admin' || role === 'administrator') ? '/admin' : 
     (role === 'teacher' || role === 'nastavnik') ? '/teacher' : '/';
+
+  // NOVA LOGIKA: Putanja za kalendar zavisi od uloge
+  // Ako je nastavnik, šaljemo ga na /teacher/kalendar, u suprotnom na standardni /kalendar
+  const calendarPath = 
+    (role === 'teacher' || role === 'nastavnik') ? '/teacher/kalendar' : '/kalendar';
 
   return (
     <nav className="flex justify-between items-center px-10 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
       <h2 className="text-xl font-black text-blue-600 tracking-tighter">EVENT.FON</h2>
       <div className="flex items-center gap-8 text-sm font-medium text-slate-600">
         
-        {/* Početna sada vodi na ispravnu rutu na osnovu gornje logike */}
         <Link href={homePath} className="hover:text-blue-600 transition-colors">
           Početna
         </Link>
         
-        <Link href="/kalendar" className="hover:text-blue-600 transition-colors">
+        {/* IZMENJENO: href sada koristi calendarPath varijablu */}
+        <Link href={calendarPath} className="hover:text-blue-600 transition-colors">
           Kalendar
         </Link>
         
@@ -40,6 +45,7 @@ const Navbar = ({ userName, userRole }: NavbarProps) => {
           label="Odjavi se" 
           variant="danger" 
           onClick={() => {
+            // Ovde možeš pozvati i logoutAkciju iz tvojih server akcija
             window.location.href = "/login";
           }} 
         />

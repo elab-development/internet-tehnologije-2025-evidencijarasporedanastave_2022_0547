@@ -22,6 +22,7 @@ CREATE TABLE "predmet" (
 	"naziv" varchar(255) NOT NULL,
 	"slug" varchar(255) NOT NULL,
 	"opis" varchar(1000),
+	"nastavnik_id" uuid NOT NULL, 
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "predmet_slug_unique" UNIQUE("slug")
 );

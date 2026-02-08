@@ -5,16 +5,17 @@ import Navbar from '../../components/navbar';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { evidentirajPrisustvo } from "@/app/actions";
+import AttendanceStats from '@/components/AttendanceStats'; 
 
 export default async function StudentPage({
   searchParams,
 }: {
   searchParams: Promise<{ success?: string }>;
 }) {
-  // 1. Čitamo parametre iz URL-a da vidimo da li je profil ažuriran
   const params = await searchParams;
-  const isSuccess = params.success === "true";
-
+  const success = params.success === "attended";
+  
   const cookieStore = await cookies();
   const ulogovaniEmail = cookieStore.get('user_email')?.value;
 
@@ -27,12 +28,32 @@ export default async function StudentPage({
     .limit(1);
   
   const student = ulogovaniKorisnici[0];
+  if (!student || student.role !== 'student') redirect('/login');
 
-  if (!student || student.role !== 'student') {
-    redirect('/login');
-  }
+  // --- 1. LOGIKA ZA STATISTIKU (Računamo u odnosu na sve dodeljene termine) ---
+  const sveMojeEvidencije = await db
+    .select({ status: prisustvo.status })
+    .from(prisustvo)
+    .where(eq(prisustvo.korisnikId, student.id));
 
-  const mojiTermini = await db
+  // Ukupan broj termina na koje je student poslat (sva predavanja)
+  const ukupnoPredavanja = sveMojeEvidencije.length;
+  // Broj termina gde je status zapravo promenjen u 'Prisutan'
+  const brojDolazaka = sveMojeEvidencije.filter(e => e.status === 'Prisutan').length;
+
+  // --- 2. LOGIKA ZA TRENUTNO VREME I FILTRIRANJE ---
+  const sad = new Date();
+  const dani = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"];
+  const danasnjiDan = dani[sad.getDay()]; 
+
+  const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false,
+    timeZone: 'Europe/Belgrade' 
+  });
+
+  const terminiDanas = await db
     .select({
       id: raspored.id,
       dan: raspored.danUNedelji,
@@ -45,80 +66,95 @@ export default async function StudentPage({
     .from(prisustvo)
     .innerJoin(raspored, eq(prisustvo.rasporedId, raspored.id))
     .innerJoin(predmet, eq(raspored.predmetId, predmet.id))
-    .where(eq(prisustvo.korisnikId, student.id));
+    .where(
+        and(
+            eq(prisustvo.korisnikId, student.id),
+            eq(raspored.danUNedelji, danasnjiDan)
+        )
+    );
+
+  const aktivniTermini = terminiDanas.filter(termin => {
+    const pocetak = termin.pocetak.slice(0, 5);
+    const kraj = termin.kraj.slice(0, 5);
+    return trenutnoVreme >= pocetak && trenutnoVreme <= kraj;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar userName={student.ime} userRole={student.role} />
 
-      {/* --- POPUP PORUKA ZA USPEŠNU IZMENU --- */}
-      {isSuccess && (
-        <div className="max-w-4xl mx-auto px-6 mt-6 animate-bounce">
-          <div className="bg-emerald-500 text-white p-4 rounded-2xl shadow-lg flex items-center gap-3">
-            <span className="text-lg">✅</span>
-            <span className="font-black text-[10px] uppercase tracking-[0.2em]">
-              Profil je uspešno ažuriran!
-            </span>
+      {success && (
+        <div className="max-w-4xl mx-auto px-6 mt-8">
+          <div className="bg-emerald-500 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between animate-bounce">
+            <span className="font-black text-[10px] uppercase tracking-widest">✅ Prisustvo je uspešno evidentirano!</span>
           </div>
         </div>
       )}
 
       <main className="max-w-4xl mx-auto px-6 py-16">
-        <div className="flex justify-between items-end mb-16">
+        {/* STATISTIKA: totalTerms su sva predavanja, attendedTerms su dolasci */}
+        <AttendanceStats 
+          totalTerms={ukupnoPredavanja} 
+          attendedTerms={brojDolazaka} 
+        />
+
+        <div className="flex justify-between items-end mb-12 mt-16">
           <div>
-            <span className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-              {student.role} Dashboard
-            </span>
-            <h2 className="text-5xl font-black text-slate-900 mt-6 tracking-tight">
-              Zdravo, <span className="text-blue-600">{student.ime}</span>!
+            <h2 className="text-5xl font-black tracking-tighter uppercase leading-none">
+              <span className="text-blue-600">Trenutno</span> Predavanje
             </h2>
+            <p className="text-slate-400 font-bold mt-4 uppercase text-[10px] tracking-[0.2em]">
+              {danasnjiDan}, {trenutnoVreme}h
+            </p>
           </div>
-          
-          <Link 
-            href="/student/profil" 
-            className="border-2 border-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all text-center block"
-          >
-            Izmeni Profil
+          <Link href="/student/profil" className="border-2 border-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all">
+            Profil
           </Link>
         </div>
 
         <div className="grid gap-6">
-          <h3 className="text-sm font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Tvoj nedeljni raspored</h3>
-          
-          {mojiTermini.length === 0 ? (
-            <div className="bg-white p-12 rounded-[2.5rem] border border-dashed border-slate-200 text-center">
-               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Nemaš zakazanih termina za prisustvo.</p>
+          {aktivniTermini.length === 0 ? (
+            <div className="bg-white p-16 rounded-[3rem] border-2 border-dashed border-slate-100 text-center">
+               <p className="text-slate-300 font-black uppercase tracking-[0.3em] text-xs">
+                 Trenutno nemate aktivnih predavanja u rasporedu.
+               </p>
             </div>
           ) : (
-            mojiTermini.map((termin) => (
-              <div key={termin.id} className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center transition-all hover:shadow-md">
+            aktivniTermini.map((termin) => (
+              <div key={termin.id} className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-blue-100 flex flex-col md:flex-row justify-between items-center transition-all hover:scale-[1.01]">
                 <div className="text-center md:text-left">
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">{termin.nazivPredmeta}</h3>
-                  <p className="text-slate-500 font-bold mt-1 uppercase text-[10px] tracking-widest">
-                    {termin.dan} | {termin.pocetak.slice(0,5)} - {termin.kraj.slice(0,5)} | Sala {termin.kabinet || "N/A"}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                    <span className="text-red-500 font-black text-[9px] uppercase tracking-widest">U toku je</span>
+                  </div>
+                  <h3 className="text-3xl font-black text-slate-800 tracking-tight uppercase">{termin.nazivPredmeta}</h3>
+                  <p className="text-slate-400 font-bold mt-1 uppercase text-[10px] tracking-widest">
+                    Sala: {termin.kabinet} | {termin.pocetak.slice(0,5)} - {termin.kraj.slice(0,5)}
                   </p>
-                  
-                  <span className={`inline-block mt-3 px-3 py-1 rounded-full text-[10px] font-black uppercase ${termin.statusPrisustva === 'Prisutan' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                     {termin.statusPrisustva}
-                  </span>
                 </div>
                 
-                <div className="flex flex-col gap-3 w-full md:w-auto mt-6 md:mt-0">
-                  <button className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-blue-700 transition-all text-[10px] uppercase tracking-widest">
-                    Potvrdi prisustvo
-                  </button>
-                  
-                  <a 
-                    href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(termin.nazivPredmeta)}&details=Predavanje&location=Sala+${termin.kabinet}`}
-                    target="_blank"
-                    className="text-center border border-slate-200 text-slate-400 px-8 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest"
-                  >
-                    Dodaj u Google Calendar
-                  </a>
+                <div className="mt-8 md:mt-0">
+                  <form action={evidentirajPrisustvo}>
+                    <input type="hidden" name="korisnikId" value={student.id} />
+                    <input type="hidden" name="rasporedId" value={termin.id} />
+                    <button 
+                      type="submit"
+                      disabled={termin.statusPrisustva === 'Prisutan'}
+                      className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      {termin.statusPrisustva === 'Prisutan' ? 'Evidentirani ste' : 'Potvrdi Prisustvo'}
+                    </button>
+                  </form>
                 </div>
               </div>
             ))
           )}
+        </div>
+
+        <div className="mt-16 pt-8 border-t border-slate-100 text-center">
+           <Link href="/kalendar" className="text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-blue-600 transition-colors">
+              Prikaži ceo nedeljni raspored →
+           </Link>
         </div>
       </main>
     </div>
