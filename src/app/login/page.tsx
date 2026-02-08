@@ -95,7 +95,7 @@ export default function LoginPage() {
                 : 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-200 active:scale-95'
             }`}
           >
-            {loading ? 'Provera...' : 'Prijavi se'}
+            {loading ? 'Provera...' : 'Pristupi sistemu'}
           </button>
         </form>
         
