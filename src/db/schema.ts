@@ -1,12 +1,11 @@
 import { pgTable, uuid, varchar, timestamp, time, date, primaryKey } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
-// --- TABELE ---
+// --TABELE
 
 export const korisnik = pgTable('korisnik', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
   ime: varchar('ime', { length: 255 }).notNull(),
-  // Dodat slug za korisnika (npr. ime-prezime-123) za čistije URL profile
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
@@ -18,7 +17,6 @@ export const predmet = pgTable('predmet', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
   naziv: varchar('naziv', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull().unique(),
-  // IZMENI OVU LINIJU (dodaj .notNull() i promeni length na 500):
   opis: varchar('opis', { length: 500 }).notNull(), 
   createdAt: timestamp('created_at').default(sql`now()`).notNull(),
 });
@@ -38,6 +36,7 @@ export const raspored = pgTable('raspored', {
   nastavniDan: varchar('nastavni_dan', { length: 50 }),
   predmetId: uuid('predmet_id').references(() => predmet.id).notNull(),
   kalendarId: uuid('kalendar_id').references(() => kalendar.id),
+  kabinet: varchar('kabinet', { length: 50 }),
   createdAt: timestamp('created_at').default(sql`now()`).notNull(),
 });
 

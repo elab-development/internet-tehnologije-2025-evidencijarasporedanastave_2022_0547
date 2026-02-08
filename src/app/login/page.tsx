@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +14,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Pozivamo REST API kontroler koji smo sredili
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
@@ -26,23 +23,25 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Redirekcija na osnovu uloge iz baze (SK 2)
-        // data.role dolazi direktno iz kolone 'role' u tabeli 'korisnik'
-        if (data.role === 'admin') {
-          router.push('/admin');
-        } else if (data.role === 'nastavnik') {
-          router.push('/teacher');
-        } else if (data.role === 'student') {
-          router.push('/student');
+        // Normalizujemo ulogu (mala slova)
+        const uloga = data.role.toLowerCase().trim();
+
+        // KLJUČNA PROMENA: window.location.href umesto router.push
+        // Ovo rešava problem sa Middleware-om koji ne vidi cookie odmah
+        if (uloga === 'admin') {
+          window.location.href = '/admin';
+        } else if (uloga === 'nastavnik' || uloga === 'teacher') {
+          window.location.href = '/teacher';
+        } else if (uloga === 'student') {
+          window.location.href = '/student';
         } else {
-          router.push('/');
+          window.location.href = '/';
         }
       } else {
-        // Prikazujemo specifičnu JSON grešku koju je vratio server (npr. "Neispravni podaci")
-        setError(data.error || 'Neuspešna prijava. Proverite podatke.');
+        setError(data.error || 'Neispravni podaci. Pokušajte ponovo.');
       }
     } catch (err) {
-      setError('Serverska greška. Proverite da li je Docker baza pokrenuta.');
+      setError('Greška u komunikaciji sa serverom.');
     } finally {
       setLoading(false);
     }
@@ -96,13 +95,13 @@ export default function LoginPage() {
                 : 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-200 active:scale-95'
             }`}
           >
-            {loading ? 'Provera...' : 'Pristupi sistemu'}
+            {loading ? 'Provera...' : 'Prijavi se'}
           </button>
         </form>
         
         <div className="mt-12 pt-8 border-t border-slate-50 text-center">
           <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
-            Univerzitet u Beogradu
+            Fakultet organizacionih nauka
           </span>
         </div>
       </div>

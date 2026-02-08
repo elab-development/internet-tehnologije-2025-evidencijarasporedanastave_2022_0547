@@ -1,24 +1,45 @@
-
-
 import { db } from "@/db";
 import { korisnik } from "@/db/schema";
+import { eq } from "drizzle-orm"; // Dodaj eq import
 import { dodajKorisnika } from "../actions"; 
 import Navbar from '../../components/navbar';
-
+import { cookies } from 'next/headers'; // Dodaj cookies
+import { redirect } from 'next/navigation'; // Dodaj redirect
 
 export default async function AdminPage() {
+  // 1. Izvuci email iz kolačića (kao što smo radili kod studenta)
+  const cookieStore = await cookies();
+  const ulogovaniEmail = cookieStore.get('user_email')?.value;
+
+  if (!ulogovaniEmail) {
+    redirect('/login');
+  }
+
+  // 2. Pronađi pravog admina u bazi
+  const pronadjeniKorisnici = await db
+    .select()
+    .from(korisnik)
+    .where(eq(korisnik.email, ulogovaniEmail))
+    .limit(1);
+  
+  const adminPodaci = pronadjeniKorisnici[0];
+
+  // Sigurnosna provera: Ako korisnik nije admin, vrati ga na login
+  if (!adminPodaci || adminPodaci.role.toLowerCase() !== 'admin') {
+    redirect('/login');
+  }
+
   const sviKorisniciIzBaze = await db.select().from(korisnik);
-  // Simulacija admina (kasnije ide pravi Auth)
-  const ulogovanKorisnik = { ime: "Admin", role: "Administrator" };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar userName={ulogovanKorisnik.ime} />
+      {/* 3. Prosledi PRAVE podatke iz baze u Navbar */}
+      <Navbar userName={adminPodaci.ime} userRole={adminPodaci.role} />
 
       <main className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
           <span className="bg-red-100 text-red-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
-            {ulogovanKorisnik.role} Dashboard
+            {adminPodaci.role} Dashboard
           </span>
           <h1 className="text-5xl font-black text-slate-900 mt-6 tracking-tight">
             Upravljanje <span className="text-red-600">Sistemom</span>

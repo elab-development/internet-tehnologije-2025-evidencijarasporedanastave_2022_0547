@@ -1,19 +1,20 @@
 import { db } from '@/db';
 import { korisnik } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
+    
+    console.log(`Pokušaj prijave: ${email}`);
 
-    // Provera korisnika u bazi podataka
     const existingUser = await db
       .select()
       .from(korisnik)
       .where(
         and(
-          eq(korisnik.email, email),
+          sql`lower(${korisnik.email}) = ${email.toLowerCase().trim()}`,
           eq(korisnik.password, password)
         )
       )
@@ -21,34 +22,46 @@ export async function POST(request: Request) {
 
     if (existingUser.length > 0) {
       const user = existingUser[0];
+      const normalizedRole = user.role.toLowerCase().trim();
       
-      // Kreiramo odgovor sa podacima o korisniku
+      console.log(`Korisnik pronađen! Uloga: ${normalizedRole}, Ime: ${user.ime}`);
+
       const response = NextResponse.json({ 
         message: "Uspešan login", 
-        role: user.role,
+        role: normalizedRole, 
         ime: user.ime 
+      }, { status: 200 });
+
+      // 1. Postavljamo glavni token za Middleware
+      response.cookies.set('auth_token', 'ulogovan-korisnik-sesija', {
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: 60 * 60 * 24, 
+        path: '/',
+        sameSite: 'lax'
       });
 
-      // KLJUČNI DEO: Postavljamo 'auth_token' koji Middleware proverava
-      response.cookies.set('auth_token', 'ulogovan-korisnik-sesija', {
-        httpOnly: true, // Sprečava XSS napade jer JS ne može da čita ovaj cookie
-        secure: process.env.NODE_ENV === 'production', // Koristi HTTPS u produkciji
-        maxAge: 60 * 60 * 24, // Trajanje sesije: 24 sata
-        path: '/', // Cookie važi za ceo sajt
+      // 2. KLJUČNI DEO: Čuvamo EMAIL ulogovanog korisnika u kolačić
+      // Ovo omogućava StudentPage-u da zna da li treba da prikaže Bogdana ili Studenta
+      response.cookies.set('user_email', user.email, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24,
+        path: '/',
+        sameSite: 'lax'
       });
 
       return response;
     }
 
-    // JSON odgovor za neuspešan login (REST konvencija)
     return NextResponse.json(
-      { error: "Neispravni podaci (email ili lozinka)" }, 
+      { error: "Neispravan email ili lozinka" }, 
       { status: 401 }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: "Greška na serveru prilikom prijave" }, 
+      { error: "Greška na serveru" }, 
       { status: 500 }
     );
   }
