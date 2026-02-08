@@ -1,81 +1,114 @@
 import { db } from "@/db";
-import { korisnik } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import Navbar from '../../../components/navbar'; // Putanja prilagođena strukturi foldera
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { raspored, predmet, korisnik } from "@/db/schema";
+import { eq, asc } from "drizzle-orm";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import Navbar from "@/components/navbar";
 
-export default async function TeacherPage() {
-  // 1. Dobavljanje ulogovanog nastavnika iz kolačića
+export default async function TeacherCalendarPage() {
+  // 1. Provera sesije i ulogovanog nastavnika
   const cookieStore = await cookies();
-  const ulogovaniEmail = cookieStore.get('user_email')?.value;
-  if (!ulogovaniEmail) redirect('/login');
+  const email = cookieStore.get("user_email")?.value;
 
-  const ulogovaniKorisnici = await db
+  if (!email) redirect("/login");
+
+  const pronadjeni = await db
     .select()
     .from(korisnik)
-    .where(eq(korisnik.email, ulogovaniEmail))
+    .where(eq(korisnik.email, email))
     .limit(1);
-  
-  const nastavnik = ulogovaniKorisnici[0];
 
-  // Bezbednosna provera: Samo nastavnik sme da pristupi
-  if (!nastavnik || nastavnik.role !== 'nastavnik') {
-    redirect('/login');
+  const user = pronadjeni[0];
+  if (!user || (user.role !== 'teacher' && user.role !== 'nastavnik')) {
+    redirect("/login");
   }
 
-  // 2. Filtriranje: Uzimamo samo studente iz baze
-  const studentiIzBaze = await db
-    .select()
-    .from(korisnik)
-    .where(eq(korisnik.role, 'student'));
+  // 2. Upit: Join raspored -> predmet (filtrirano po nastavniku)
+  // Dodat je 'asc(raspored.vremePocetka)' da bi časovi bili poređani po vremenu
+  const mojiTermini = await db
+    .select({
+      id: raspored.id,
+      dan: raspored.danUNedelji,
+      pocetak: raspored.vremePocetka,
+      kraj: raspored.vremeZavrsetka,
+      kabinet: raspored.kabinet,
+      predmetNaziv: predmet.naziv,
+    })
+    .from(raspored)
+    .innerJoin(predmet, eq(raspored.predmetId, predmet.id))
+    .where(eq(predmet.nastavnikId, user.id))
+    .orderBy(asc(raspored.vremePocetka)); 
+
+  const daniUNedelji = ["Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak"];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Prosleđujemo i userName i userRole da bi Navbar ispravno generisao linkove */}
-      <Navbar userName={nastavnik.ime} userRole={nastavnik.role} />
-
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-16">
-          <span className="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
-            {nastavnik.role} Dashboard
-          </span>
-          <h2 className="text-5xl font-black text-slate-900 mt-6 tracking-tight leading-none uppercase">
-            Današnji <span className="text-green-600">Časovi</span>!
-          </h2>
-          <p className="text-slate-400 font-bold mt-4 uppercase text-[10px] tracking-[0.2em]">
-             Nastavnik: {nastavnik.ime}
-          </p>
+      <Navbar userName={user.ime} userRole={user.role} />
+      
+      <main className="max-w-7xl mx-auto px-6 py-16">
+        <div className="mb-12">
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase leading-none">
+              Nedeljni <span className="text-blue-600">Raspored</span>
+            </h1>
+            <p className="text-slate-400 font-bold mt-3 uppercase text-[10px] tracking-[0.2em]">
+              Pregled svih vaših predavanja i termina
+            </p>
         </div>
 
-        <div className="bg-white p-10 rounded-[3.5rem] shadow-xl shadow-slate-200/50 border border-slate-200">
-          <h3 className="text-xl font-black mb-8 text-slate-800 border-b pb-4 border-slate-50 italic uppercase tracking-tighter">
-            Evidencija prisustva studenata (SK 7):
-          </h3>
-          
-          <div className="space-y-4">
-            {studentiIzBaze.length === 0 ? (
-              <p className="text-center text-slate-300 py-12 font-bold uppercase text-[10px] tracking-widest">
-                Nema registrovanih studenata u sistemu.
-              </p>
-            ) : (
-              studentiIzBaze.map((u) => (
-                <div key={u.id} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex justify-between items-center hover:bg-white hover:shadow-lg hover:border-green-100 transition-all group">
-                  <div>
-                    <h4 className="font-black text-lg text-slate-800 group-hover:text-green-600 transition-colors uppercase tracking-tight">
-                      {u.ime}
-                    </h4>
-                    <p className="text-slate-400 text-xs font-medium italic">{u.email}</p>
-                  </div>
-                  
-                  {/* Koristimo u.id (UUID) direktno da izbegnemo greške u bazi */}
-                  <button className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 shadow-md transition-all active:scale-95">
-                    Upiši prisustvo
-                  </button>
+        {/* Mreža od 5 kolona - po jedna za svaki radni dan */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {daniUNedelji.map((dan) => {
+            // Filtriramo SVE termine koji pripadaju konkretnom danu
+            const terminiZaDan = mojiTermini.filter((r) => r.dan === dan);
+            
+            return (
+              <div key={dan} className="flex flex-col gap-4">
+                {/* Zaglavlje dana */}
+                <div className="flex items-center justify-between border-b-2 border-slate-200 pb-2 px-1">
+                    <h3 className="font-black text-slate-800 uppercase text-[11px] tracking-widest">
+                        {dan}
+                    </h3>
+                    <span className="bg-slate-200 text-slate-600 text-[9px] font-black px-2 py-0.5 rounded-md">
+                        {terminiZaDan.length}
+                    </span>
                 </div>
-              ))
-            )}
-          </div>
+                
+                {/* Lista termina za taj dan */}
+                <div className="flex flex-col gap-4">
+                  {terminiZaDan.length === 0 ? (
+                    <div className="py-10 px-2 border-2 border-dashed border-slate-100 rounded-[2rem] flex items-center justify-center">
+                      <p className="text-[8px] text-slate-300 font-black uppercase tracking-tighter italic">Nema obaveza</p>
+                    </div>
+                  ) : (
+                    terminiZaDan.map((termin) => (
+                      <div 
+                        key={termin.id} 
+                        className="bg-white p-5 rounded-[1.8rem] shadow-sm border border-slate-100 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/5 transition-all group"
+                      >
+                        {/* Vreme termina */}
+                        <div className="bg-blue-50 text-blue-600 w-fit px-3 py-1 rounded-full mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                           <span className="text-[9px] font-black uppercase tracking-tight">
+                              {termin.pocetak.slice(0,5)} — {termin.kraj.slice(0,5)}
+                           </span>
+                        </div>
+                        
+                        {/* Naziv predmeta */}
+                        <h4 className="font-black text-slate-800 text-xs uppercase leading-tight min-h-[2rem]">
+                          {termin.predmetNaziv}
+                        </h4>
+                        
+                        {/* Sala/Kabinet */}
+                        <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+                           <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest italic">Sala</span>
+                           <span className="text-[10px] font-black text-slate-700">{termin.kabinet}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>
