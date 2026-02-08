@@ -16,57 +16,59 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Putanja do API rute koju smo premestili u src/app/api/auth/login/route.ts
+      // Pozivamo REST API kontroler koji smo sredili
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
         headers: { 'Content-Type': 'application/json' },
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const user = await res.json();
-        
-        // Logika za razlikovanje uloga prema dokumentaciji projekta
-        // U bazi kolona 'role' mora imati vrednosti: 'admin', 'teacher' ili 'student'
-        if (user.role === 'admin') {
-          router.push('/admin'); 
-        } else if (user.role === 'teacher') {
+        // Redirekcija na osnovu uloge iz baze (SK 2)
+        // data.role dolazi direktno iz kolone 'role' u tabeli 'korisnik'
+        if (data.role === 'admin') {
+          router.push('/admin');
+        } else if (data.role === 'nastavnik') {
           router.push('/teacher');
-        } else if (user.role === 'student') {
+        } else if (data.role === 'student') {
           router.push('/student');
         } else {
-          // Ako uloga nije prepoznata, idi na početnu
           router.push('/');
         }
       } else {
-        setError('Neispravan email ili lozinka. Pokušajte ponovo.');
+        // Prikazujemo specifičnu JSON grešku koju je vratio server (npr. "Neispravni podaci")
+        setError(data.error || 'Neuspešna prijava. Proverite podatke.');
       }
     } catch (err) {
-      setError('Došlo je do greške prilikom povezivanja sa serverom.');
+      setError('Serverska greška. Proverite da li je Docker baza pokrenuta.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-xl border border-gray-200">
-        <h1 className="text-3xl font-extrabold text-center text-blue-600 mb-2">EVENT.FON</h1>
-        <p className="text-gray-500 text-center mb-8">Evidencija rasporeda nastave</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-900">
+      <div className="w-full max-w-md p-10 bg-white shadow-2xl rounded-[2rem] border border-slate-100">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-black text-blue-600 tracking-tighter uppercase">Event.FON</h1>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mt-2">Sistem za evidenciju nastave</p>
+        </div>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-xl mb-6 text-sm font-medium animate-pulse">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email adresa</label>
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">Institucionalni Email</label>
             <input
               type="email"
-              placeholder="npr. bogdan@student.fon.rs"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              placeholder="ime.prezime@fon.rs"
+              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-slate-900"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -74,11 +76,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lozinka</label>
+            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">Lozinka</label>
             <input
               type="password"
               placeholder="••••••••"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-slate-900"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -88,17 +90,21 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full p-3 rounded-lg font-bold text-white transition ${
-              loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md'
+            className={`w-full p-4 rounded-2xl font-black text-white uppercase tracking-widest transition-all shadow-lg ${
+              loading 
+                ? 'bg-slate-300 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-200 active:scale-95'
             }`}
           >
-            {loading ? 'Prijava u toku...' : 'Prijavi se'}
+            {loading ? 'Provera...' : 'Pristupi sistemu'}
           </button>
         </form>
         
-        <p className="mt-8 text-center text-xs text-gray-400 uppercase tracking-widest">
-          Fakultet organizacionih nauka
-        </p>
+        <div className="mt-12 pt-8 border-t border-slate-50 text-center">
+          <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
+            Univerzitet u Beogradu
+          </span>
+        </div>
       </div>
     </div>
   );
