@@ -51,14 +51,33 @@ export async function azurirajProfil(formData: FormData) {
   const id = formData.get("id") as string;
   const novoIme = formData.get("ime") as string;
   const noviEmail = formData.get("email") as string;
+  const novaSifra = formData.get("sifra") as string;
+
   if (!id) return;
 
-  await db.update(korisnik).set({ ime: novoIme, email: noviEmail, slug: novoIme.toLowerCase().replace(/\s+/g, '-') }).where(eq(korisnik.id, id));
+  const updateData: any = { 
+    ime: novoIme, 
+    email: noviEmail, 
+    slug: novoIme.toLowerCase().replace(/\s+/g, '-') 
+  };
+
+  if (novaSifra && novaSifra.trim() !== "") {
+    const salt = await bcrypt.genSalt(10);
+    updateData.password = await bcrypt.hash(novaSifra, salt);
+  }
+
+  await db.update(korisnik)
+    .set(updateData)
+    .where(eq(korisnik.id, id));
+
   const cookieStore = await cookies();
   cookieStore.set("user_email", noviEmail, { path: "/" });
   
   revalidatePath("/student");
-  redirect("/student?success=true");
+  revalidatePath("/admin");
+  
+  // PREUSMERAVANJE NA ADMIN STRANICU
+  redirect("/admin");
 }
 
 export async function logoutAkcija() {
@@ -111,7 +130,7 @@ export async function adminDodajRaspored(formData: FormData) {
     vremePocetka: formatVreme(pocetak),
     vremeZavrsetka: formatVreme(kraj),
     kabinet,
-    nastavniDan: "Predavanja" // Podrazumevano
+    nastavniDan: "Predavanja" 
   });
 
   revalidatePath("/admin/kalendar");
