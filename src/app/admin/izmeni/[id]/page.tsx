@@ -66,7 +66,6 @@ export default async function EditProfilePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-6">
-            {/* Promenjen href na /admin */}
             <Link 
               href="/admin" 
               className="text-center bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center"

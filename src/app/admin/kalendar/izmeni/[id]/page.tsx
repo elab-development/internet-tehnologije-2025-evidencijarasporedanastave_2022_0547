@@ -80,7 +80,6 @@ export default async function EditSchedulePage({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* POČETAK */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Vreme Početka</label>
               <input 
@@ -91,8 +90,6 @@ export default async function EditSchedulePage({
                 required
               />
             </div>
-
-            {/* ZAVRŠETAK */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Vreme Završetka</label>
               <input 

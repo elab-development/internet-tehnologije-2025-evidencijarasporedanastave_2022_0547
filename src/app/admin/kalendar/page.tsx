@@ -17,7 +17,7 @@ export default async function AdminCalendarPage() {
   const ulogovani = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail)).limit(1);
   if (!ulogovani[0] || ulogovani[0].role !== 'admin') redirect('/login');
 
-  // 1. Dohvatanje svih predmeta za dropdown meni
+  // 1. Dohvatanje svih predmeta za drop
   const sviPredmeti = await db.select().from(predmet).orderBy(asc(predmet.naziv));
 
   // 2. Dohvatanje celokupnog rasporeda

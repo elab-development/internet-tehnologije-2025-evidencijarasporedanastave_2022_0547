@@ -12,18 +12,15 @@ import {
 console.log("🌱 Seeding database...");
 
 async function seed() {
-  // Hashujemo lozinku jednom
   const passwordHash = await bcrypt.hash("1233", 10);
 
   await db.transaction(async (tx) => {
-    // 1. BRISANJE (Redosled je bitan zbog stranih ključeva!)
     await tx.delete(prisustvo);
     await tx.delete(raspored);
     await tx.delete(kalendar);
     await tx.delete(predmet);
     await tx.delete(korisnik);
 
-    // 2. KORISNICI
     const [admin] = await tx
       .insert(korisnik)
       .values({
@@ -46,7 +43,6 @@ async function seed() {
       })
       .returning();
 
-    // DODATO: Test nastavnik kako bismo povezali predmete
     const [profesor] = await tx
       .insert(korisnik)
       .values({
@@ -58,15 +54,13 @@ async function seed() {
       })
       .returning();
 
-    // 3. PREDMETI
-    // ISPRAVLJENO: Dodat nastavnikId jer je obavezan u novoj šemi
     const [iteh] = await tx
       .insert(predmet)
       .values({
         naziv: "Internet Tehnologije",
         slug: "internet-tehnologije",
         opis: "Razvoj modernih veb aplikacija",
-        nastavnikId: profesor.id, // Povezujemo predmet sa profesorom
+        nastavnikId: profesor.id,
       })
       .returning();
 
@@ -80,7 +74,6 @@ async function seed() {
       })
       .returning();
 
-    // 4. KALENDAR
     const [datum] = await tx
       .insert(kalendar)
       .values({
@@ -89,11 +82,10 @@ async function seed() {
       })
       .returning();
 
-    // 5. RASPORED
     const [termin] = await tx
       .insert(raspored)
       .values({
-        danUNedelji: "Nedelja", // Postavio sam Nedelja da bi ti radilo testiranje danas
+        danUNedelji: "Nedelja",
         vremePocetka: "14:00:00",
         vremeZavrsetka: "21:00:00",
         nastavniDan: "Predavanja",
@@ -103,13 +95,11 @@ async function seed() {
       })
       .returning();
 
-    // 6. PRISUSTVO (Inicijalno dodeljujemo termin studentu kao 'Nije prisutan')
-    // ISPRAVLJENO: KorisnikId i RasporedId moraju biti validni UUID-ovi
     await tx.insert(prisustvo).values({
       korisnikId: student.id,
       rasporedId: termin.id,
       datumPrisustva: "2026-02-08",
-      status: "Nije prisutan", // Početni status pre evidencije
+      status: "Nije prisutan",
     });
   });
 

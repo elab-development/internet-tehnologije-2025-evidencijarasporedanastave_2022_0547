@@ -9,7 +9,7 @@ export const korisnik = pgTable('korisnik', {
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
-  role: varchar('role', { length: 50 }).notNull(), // 'student' ili 'nastavnik'
+  role: varchar('role', { length: 50 }).notNull(),
   createdAt: timestamp('created_at').default(sql`now()`).notNull(),
 });
 
@@ -18,7 +18,6 @@ export const predmet = pgTable('predmet', {
   naziv: varchar('naziv', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   opis: varchar('opis', { length: 500 }).notNull(), 
-  // DODATO: Povezivanje predmeta sa nastavnikom
   nastavnikId: uuid('nastavnik_id').references(() => korisnik.id).notNull(), 
   createdAt: timestamp('created_at').default(sql`now()`).notNull(),
 });
@@ -57,13 +56,11 @@ export const prisustvo = pgTable('prisustvo', {
 
 export const korisnikRelations = relations(korisnik, ({ many }) => ({
   prisustva: many(prisustvo),
-  // DODATO: Nastavnik može predavati više predmeta
   predmeti: many(predmet), 
 }));
 
 export const predmetRelations = relations(predmet, ({ one, many }) => ({
   rasporedi: many(raspored),
-  // DODATO: Svaki predmet ima jednog nastavnika
   nastavnik: one(korisnik, { fields: [predmet.nastavnikId], references: [korisnik.id] }),
 }));
 
