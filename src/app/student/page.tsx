@@ -30,10 +30,9 @@ export default async function StudentPage({
   const student = ulogovaniKorisnici[0];
   if (!student || student.role !== 'student') redirect('/login');
 
-  // --- 1. PRECIZNO VREME I DAN (Srbija zona) ---
   const sad = new Date();
   
-  // Vreme u formatu HH:mm
+
   const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { 
     hour: '2-digit', 
     minute: '2-digit', 
@@ -41,7 +40,6 @@ export default async function StudentPage({
     timeZone: 'Europe/Belgrade' 
   });
 
-  // Dan u nedelji (prvo slovo veliko, npr. "Ponedeljak")
   const danFormatter = new Intl.DateTimeFormat('sr-RS', { 
     weekday: 'long', 
     timeZone: 'Europe/Belgrade' 
@@ -49,8 +47,6 @@ export default async function StudentPage({
   let danasnjiDanRaw = danFormatter.format(sad);
   const danasnjiDan = danasnjiDanRaw.charAt(0).toUpperCase() + danasnjiDanRaw.slice(1);
 
-  // --- 2. DOHVATANJE PODATAKA ---
-  // Uzimamo sve termine iz prisustva za statistiku
   const sveMojeEvidencije = await db
     .select({ 
       status: prisustvo.status,
@@ -66,20 +62,15 @@ export default async function StudentPage({
     .innerJoin(predmet, eq(raspored.predmetId, predmet.id))
     .where(eq(prisustvo.korisnikId, student.id));
 
-  // --- 3. STATISTIKA ---
   const ukupnoPredavanja = sveMojeEvidencije.length;
   const brojDolazaka = sveMojeEvidencije.filter(e => e.status === 'Prisutan').length;
 
-  // --- 4. FILTRIRANJE AKTIVNOG TERMINA ---
   const aktivniTermini = sveMojeEvidencije.filter(termin => {
-    // Provera dana (mora biti identično kao u bazi, npr. "Ponedeljak")
     if (termin.dan !== danasnjiDan) return false;
 
-    // Uzimamo samo sate i minute iz baze (HH:mm) jer baza može vratiti HH:mm:ss
     const pocetak = termin.pocetak.slice(0, 5);
     const kraj = termin.kraj.slice(0, 5);
 
-    // Poređenje stringova "14:15" >= "14:00" && "14:15" <= "16:00"
     return trenutnoVreme >= pocetak && trenutnoVreme <= kraj;
   });
 
@@ -96,7 +87,6 @@ export default async function StudentPage({
       )}
 
       <main className="max-w-4xl mx-auto px-6 py-16">
-        {/* Statistika dolazaka */}
         <AttendanceStats 
           totalTerms={ukupnoPredavanja} 
           attendedTerms={brojDolazaka} 
