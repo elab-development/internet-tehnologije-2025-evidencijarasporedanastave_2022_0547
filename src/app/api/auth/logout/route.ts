@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
-    // Ovde bi išla logika za brisanje cookie-ja ili sesije
-    // npr. cookies().delete('session')
+  
     
     return NextResponse.json(
       { message: "Uspešno ste se odjavili sa sistema (SK 2)" }, 

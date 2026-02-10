@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         ime: user.ime 
       }, { status: 200 });
 
-      // 1. Postavljamo glavni token za Middleware
+      
       response.cookies.set('auth_token', 'ulogovan-korisnik-sesija', {
         httpOnly: true, 
         secure: process.env.NODE_ENV === 'production', 
@@ -41,8 +41,6 @@ export async function POST(request: Request) {
         sameSite: 'lax'
       });
 
-      // 2. KLJUČNI DEO: Čuvamo EMAIL ulogovanog korisnika u kolačić
-      // Ovo omogućava StudentPage-u da zna da li treba da prikaže Bogdana ili Studenta
       response.cookies.set('user_email', user.email, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

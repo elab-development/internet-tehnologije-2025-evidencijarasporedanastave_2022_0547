@@ -1,4 +1,3 @@
-// types.ts
 
 export type UserRole = 'ADMIN' | 'PROFESOR' | 'STUDENT';
 
@@ -33,7 +32,6 @@ export type Raspored = {
     vreme_zavrsetka: string;
     nastavni_dan: string;
     
-    // Relacije
     predmetId: number;
     kalendarId: number;
     
@@ -43,7 +41,6 @@ export type Prisustvo = {
     datum_prisustva: string;
     status: StatusPrisustva;
     
-    // Asocijativna veza
     korisnikId: number;
     rasporedId: number;
     

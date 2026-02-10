@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { ime, email, password, role } = body;
 
-    // Osnovna validacija podataka
+  
     if (!ime || !email || !password) {
       return NextResponse.json(
         { error: "Sva polja (ime, email, lozinka) su obavezna" }, 
@@ -15,16 +15,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upis u bazu preko Drizzle ORM-a
+   
     const noviKorisnik = await db.insert(korisnik).values({
       ime,
       email,
-      password, // Napomena: U produkciji lozinka mora biti heširana
-      role: role || 'student', // Default uloga je student
+      password, 
+      role: role || 'student',
       slug: ime.toLowerCase().trim().replace(/\s+/g, '-'),
     }).returning();
 
-    // Vraćanje kreiranog korisnika u JSON formatu (REST konvencija)
+    
     return NextResponse.json(
       { 
         message: "Korisnik uspešno registrovan", 
@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     );
 
   } catch (error: any) {
-    // Obrada grešaka u JSON formatu
-    if (error.code === '23505') { // Postgres kod za Unique Constraint (npr. email već postoji)
+   
+    if (error.code === '23505') { 
       return NextResponse.json(
         { error: "Korisnik sa ovim email-om već postoji" }, 
         { status: 409 }

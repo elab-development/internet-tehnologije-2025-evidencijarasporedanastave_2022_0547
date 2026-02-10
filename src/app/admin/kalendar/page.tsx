@@ -17,10 +17,8 @@ export default async function AdminCalendarPage() {
   const ulogovani = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail)).limit(1);
   if (!ulogovani[0] || ulogovani[0].role !== 'admin') redirect('/login');
 
-  // 1. Dohvatanje svih predmeta za drop
   const sviPredmeti = await db.select().from(predmet).orderBy(asc(predmet.naziv));
 
-  // 2. Dohvatanje celokupnog rasporeda
   const savRaspored = await db
     .select({
       id: raspored.id,
@@ -41,8 +39,7 @@ export default async function AdminCalendarPage() {
       <Navbar userName={ulogovani[0].ime} userRole={ulogovani[0].role} />
 
       <main className="max-w-7xl mx-auto px-6 py-16">
-        
-        {/* NASLOV I KOMANDA NAZAD */}
+
         <div className="flex flex-col md:flex-row justify-between items-center mb-12">
           <div>
             <h1 className="text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">
