@@ -98,6 +98,18 @@ export default function LoginPage() {
             {loading ? 'Provera...' : 'Pristupi sistemu'}
           </button>
         </form>
+
+        <div className="mt-6 text-center">
+  <p className="text-sm text-slate-500">
+    Nemaš nalog?{" "}
+    <a
+      href="/register"
+      className="font-bold text-blue-600 hover:underline"
+    >
+      Registruj se
+    </a>
+  </p>
+</div>
         
         <div className="mt-12 pt-8 border-t border-slate-50 text-center">
           <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
