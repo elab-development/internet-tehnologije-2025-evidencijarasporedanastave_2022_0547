@@ -86,9 +86,15 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
         />
 
         <div className="flex justify-between items-end mb-12 mt-16">
-            <h2 className="text-5xl font-black tracking-tighter uppercase leading-none">
-              <span className="text-blue-600">Aktivno</span> Predavanje
-            </h2>
+            <div>
+              <h2 className="text-5xl font-black tracking-tighter uppercase leading-none">
+                <span className="text-blue-600">Aktivno</span> Predavanje
+              </h2>
+              {/* DODATO DUGME PROFIL */}
+              <Link href="/student/profil" className="inline-block mt-4 border-2 border-slate-200 text-slate-600 px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all">
+                Profil
+              </Link>
+            </div>
             <div className="text-right">
                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
                   Danas je index: {danasnjiIndex}

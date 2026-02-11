@@ -3,19 +3,12 @@
 import { useState, useEffect } from 'react';
 
 interface StatsProps {
-  // totalHeldTerms - broj predavanja koja su se do sada održala
   totalHeldTerms: number; 
-  // attendedTerms - broj predavanja na kojima je student bio
   attendedTerms: number;
 }
 
 export default function AttendanceStats({ totalHeldTerms, attendedTerms }: StatsProps) {
   const [percentage, setPercentage] = useState(0);
-
-  // LOGIKA: Ako je prošlo 5 predavanja (totalHeldTerms), a student bio na 4 (attendedTerms),
-  // procenat će biti 80%. Ako je bio na 5 od 5, biće 100%.
-  // Ako je prošlo predavanje a on nije evidentiran, totalHeldTerms raste, 
-  // a attendedTerms ostaje isti -> procenat opada.
   
   const realPercentage = totalHeldTerms > 0 
     ? Math.round((attendedTerms / totalHeldTerms) * 100) 
@@ -28,7 +21,6 @@ export default function AttendanceStats({ totalHeldTerms, attendedTerms }: Stats
     return () => clearTimeout(timeout);
   }, [realPercentage]);
 
-  // Boja se menja: 100% je zeleno, sve ispod je narandžasto/crveno (opciono)
   const getStatusColor = () => {
     if (percentage === 100) return 'text-emerald-500';
     if (percentage >= 75) return 'text-blue-500';
@@ -55,7 +47,7 @@ export default function AttendanceStats({ totalHeldTerms, attendedTerms }: Stats
       </div>
       
       <p className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Prisutan: {attendedTerms} / Odžano: {totalHeldTerms} predavanja
+        Prisutan: {attendedTerms} / Održano: {totalHeldTerms} predavanja
       </p>
 
       {percentage < 100 && (

@@ -9,8 +9,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault();  //sprecava da se osvezi cela stranica
+    setError(''); 
     setLoading(true);
 
     try {
