@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import Navbar from "@/components/navbar";
 
 export default async function TeacherCalendarPage() {
-  // 1. Provera sesije i ulogovanog nastavnika
   const cookieStore = await cookies();
   const email = cookieStore.get("user_email")?.value;
 
@@ -23,8 +22,6 @@ export default async function TeacherCalendarPage() {
     redirect("/login");
   }
 
-  // 2. Upit: Join raspored -> predmet (filtrirano po nastavniku)
-  // Dodat je 'asc(raspored.vremePocetka)' da bi časovi bili poređani po vremenu
   const mojiTermini = await db
     .select({
       id: raspored.id,
@@ -55,15 +52,12 @@ export default async function TeacherCalendarPage() {
             </p>
         </div>
 
-        {/* Mreža od 5 kolona - po jedna za svaki radni dan */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {daniUNedelji.map((dan) => {
-            // Filtriramo SVE termine koji pripadaju konkretnom danu
             const terminiZaDan = mojiTermini.filter((r) => r.dan === dan);
             
             return (
               <div key={dan} className="flex flex-col gap-4">
-                {/* Zaglavlje dana */}
                 <div className="flex items-center justify-between border-b-2 border-slate-200 pb-2 px-1">
                     <h3 className="font-black text-slate-800 uppercase text-[11px] tracking-widest">
                         {dan}
@@ -73,7 +67,6 @@ export default async function TeacherCalendarPage() {
                     </span>
                 </div>
                 
-                {/* Lista termina za taj dan */}
                 <div className="flex flex-col gap-4">
                   {terminiZaDan.length === 0 ? (
                     <div className="py-10 px-2 border-2 border-dashed border-slate-100 rounded-[2rem] flex items-center justify-center">
@@ -85,19 +78,16 @@ export default async function TeacherCalendarPage() {
                         key={termin.id} 
                         className="bg-white p-5 rounded-[1.8rem] shadow-sm border border-slate-100 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/5 transition-all group"
                       >
-                        {/* Vreme termina */}
                         <div className="bg-blue-50 text-blue-600 w-fit px-3 py-1 rounded-full mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                            <span className="text-[9px] font-black uppercase tracking-tight">
                               {termin.pocetak.slice(0,5)} — {termin.kraj.slice(0,5)}
                            </span>
                         </div>
                         
-                        {/* Naziv predmeta */}
                         <h4 className="font-black text-slate-800 text-xs uppercase leading-tight min-h-[2rem]">
                           {termin.predmetNaziv}
                         </h4>
                         
-                        {/* Sala/Kabinet */}
                         <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest italic">Sala</span>
                            <span className="text-[10px] font-black text-slate-700">{termin.kabinet}</span>

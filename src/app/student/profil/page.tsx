@@ -20,7 +20,6 @@ export default async function ProfilPage() {
     
   const studentData = korisnici[0];
 
-  // KLJUČNA POPRAVKA: Ako student nije pronađen u bazi, ne idemo dalje
   if (!studentData) {
     console.log("Korisnik nije pronađen u bazi za email:", ulogovaniEmail);
     redirect("/login");
@@ -34,7 +33,6 @@ export default async function ProfilPage() {
           Podešavanja <span className="text-blue-600">Profila</span>
         </h1>
 
-        {/* Šaljemo proverene podatke formi */}
         <StudentProfilForma student={studentData} />
       </main>
     </div>

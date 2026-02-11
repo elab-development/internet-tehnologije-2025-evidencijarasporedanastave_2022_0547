@@ -22,7 +22,6 @@ export default async function TeacherPage() {
     redirect('/login');
   }
 
-  // 1. Ukupan broj studenata (osnova za procenat)
   const studentiStat = await db
     .select({ 
       total: sql<number>`cast(count(${korisnik.id}) as int)` 
@@ -32,14 +31,11 @@ export default async function TeacherPage() {
   
   const ukupnoStudenata = studentiStat[0]?.total || 1;
 
-  // 2. Statistika po PREDMETU
-  // OVDE JE IZMENA: Koristimo prisustvo.korisnikId umesto prisustvo.id
   const statistikaPredmeta = await db
     .select({
       id: predmet.id,
       naziv: predmet.naziv,
       opis: predmet.opis,
-      // Brojimo prisustva koristeći korisnikId (jer prisustvo možda nema id kolonu)
       ukupnoPrisustva: sql<number>`cast(count(${prisustvo.korisnikId}) as int)`,
       brojTermina: sql<number>`cast(count(distinct ${raspored.id}) as int)`,
     })
@@ -116,7 +112,6 @@ export default async function TeacherPage() {
           })}
         </div>
 
-        {/* REGISTAR STUDENATA */}
         <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200">
           <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-10 pb-4 border-b">
             Registar Studenata

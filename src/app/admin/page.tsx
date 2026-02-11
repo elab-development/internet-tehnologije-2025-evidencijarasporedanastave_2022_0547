@@ -33,7 +33,6 @@ export default async function AdminPage() {
 
       <main className="max-w-6xl mx-auto px-6 py-16">
         
-        {/* ZAGLAVLJE SA NOVIM DUGMETOM ZA KALENDAR */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
           <div>
             <span className="bg-red-100 text-red-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
@@ -58,7 +57,6 @@ export default async function AdminPage() {
           </Link>
         </div>
 
-        {/* Forma za dodavanje korisnika */}
         <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 mb-12">
           <h2 className="text-xl font-black mb-8 uppercase tracking-tight text-slate-800">
              Upiši novog korisnika
@@ -96,7 +94,6 @@ export default async function AdminPage() {
           </form>
         </div>
 
-        {/* Lista korisnika */}
         <div className="bg-white p-10 rounded-[3.5rem] shadow-xl shadow-slate-200/50 border border-slate-100">
           <h2 className="text-xl font-black text-slate-800 mb-8 uppercase tracking-tight">Registrovani Korisnici ({sviKorisniciIzBaze.length})</h2>
           <div className="grid gap-3">

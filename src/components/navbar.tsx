@@ -10,24 +10,20 @@ interface NavbarProps {
 }
 
 const Navbar = ({ userName, userRole }: NavbarProps) => {
-  // 1. Normalizujemo ulogu za proveru
   const role = userRole?.toLowerCase().trim();
 
-  // 2. Definisanje putanje za Početnu stranu
   const homePath = 
     role === 'student' ? '/student' : 
     role === 'admin' ? '/admin' : 
     (role === 'teacher' || role === 'nastavnik') ? '/teacher' : '/';
 
-  // 3. Definisanje putanje za Kalendar (Samo jedna deklaracija!)
   const calendarPath = 
     (role === 'teacher' || role === 'nastavnik') ? '/teacher/kalendar' : 
     role === 'admin' ? '/admin/kalendar' : 
-    '/kalendar'; // Putanja za studente i ostale
+    '/kalendar';
 
   return (
     <nav className="flex justify-between items-center px-10 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
-      {/* Logo vodi na homePath */}
       <Link href={homePath} className="text-xl font-black text-blue-600 tracking-tighter hover:scale-105 transition-transform">
         EVENT.FON
       </Link>
@@ -47,7 +43,6 @@ const Navbar = ({ userName, userRole }: NavbarProps) => {
           <span className="font-bold text-slate-800 text-xs">
             {userName || "Učitavanje..."}
           </span>
-          {/* Opciono: mali indikator uloge */}
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
         </div>
         

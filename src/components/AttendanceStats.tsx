@@ -1,4 +1,4 @@
-'use client'; // Neophodno za hooks
+'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -8,11 +8,9 @@ interface StatsProps {
 }
 
 export default function AttendanceStats({ totalTerms, attendedTerms }: StatsProps) {
-  // Korišćenje useState kuke
   const [percentage, setPercentage] = useState(0);
   const realPercentage = totalTerms > 0 ? Math.round((attendedTerms / totalTerms) * 100) : 0;
 
-  // Korišćenje useEffect kuke za animaciju brojača
   useEffect(() => {
     const timeout = setTimeout(() => {
       setPercentage(realPercentage);
@@ -32,7 +30,6 @@ export default function AttendanceStats({ totalTerms, attendedTerms }: StatsProp
         </span>
       </div>
       
-      {/* Progress Bar */}
       <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
         <div 
           className="h-full bg-blue-600 transition-all duration-1000 ease-out rounded-full"

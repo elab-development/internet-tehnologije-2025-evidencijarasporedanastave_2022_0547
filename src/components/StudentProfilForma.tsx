@@ -14,13 +14,11 @@ export default function StudentProfilForma({ student }: { student: any }) {
     try {
       console.log("Pokrećem API operacije...");
 
-      // 1. POZIV: GET (TIP 2) - Putanja prilagođena tvojoj slici
       const resGet = await fetch("/api/auth/user/profile");
       if (!resGet.ok) {
         console.warn("Profil API vratio grešku, ali nastavljamo...");
       }
 
-      // 2. POZIV: POST KALENDAR (TIP 3) - Putanja koja ti je već radila
       await fetch("/api/kalendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,7 +28,6 @@ export default function StudentProfilForma({ student }: { student: any }) {
         }),
       });
 
-      // 3. POZIV: POST UPDATE (TIP 3 - IZMENA BAZE) - Putanja prilagođena tvojoj slici
       const resUpdate = await fetch("/api/auth/user/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,7 +37,7 @@ export default function StudentProfilForma({ student }: { student: any }) {
       if (resUpdate.ok) {
         alert("Podaci su uspešno sačuvani u bazi preko API ruta!");
         router.push("/student");
-        router.refresh(); // Da bi se ime odmah promenilo u Navbar-u
+        router.refresh();
       } else {
         const errorData = await resUpdate.json();
         alert(`Greška pri čuvanju: ${errorData.error || "Nepoznata greška"}`);

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const cookieStore = await cookies();
     const email = cookieStore.get('user_email')?.value;
 
-    console.log("Pokušaj ažuriranja za email:", email); // Ovo ćeš videti u terminalu
+    console.log("Pokušaj ažuriranja za email:", email);
     console.log("Novo ime:", ime);
 
     if (!email) {
@@ -20,7 +20,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Niste autorizovani" }, { status: 401 });
     }
 
-    // Ažuriranje u bazi
     const result = await db
       .update(korisnik)
       .set({ ime: ime })

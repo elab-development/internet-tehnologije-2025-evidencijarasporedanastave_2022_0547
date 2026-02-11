@@ -23,11 +23,8 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Normalizujemo ulogu (mala slova)
         const uloga = data.role.toLowerCase().trim();
 
-        // KLJUČNA PROMENA: window.location.href umesto router.push
-        // Ovo rešava problem sa Middleware-om koji ne vidi cookie odmah
         if (uloga === 'admin') {
           window.location.href = '/admin';
         } else if (uloga === 'nastavnik' || uloga === 'teacher') {

@@ -11,7 +11,6 @@ export default async function KalendarPage({
 }: {
   searchParams: Promise<{ q?: string; error?: string; success?: string }>;
 }) {
-  // 1. Priprema parametara i provera sesije
   const params = await searchParams;
   const error = params.error;
   const success = params.success;
@@ -21,7 +20,6 @@ export default async function KalendarPage({
   const ulogovaniEmail = cookieStore.get('user_email')?.value;
   if (!ulogovaniEmail) redirect('/login');
 
-  // 2. Provera korisnika u bazi
   const ulogovaniKorisnici = await db
     .select()
     .from(korisnik)
@@ -31,13 +29,11 @@ export default async function KalendarPage({
   const korisnikPodaci = ulogovaniKorisnici[0];
   if (!korisnikPodaci) redirect('/login');
 
-  // 3. Dobavljanje podataka za "Trenutno u toku" proveru
   const sad = new Date();
   const dani = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"];
   const trenutniDan = dani[sad.getDay()];
   const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
-  // 4. Izvlačenje rasporeda iz baze sa sortiranjem
   const rezultatiIzBaze = await db
     .select({
       id: raspored.id,
@@ -60,9 +56,7 @@ export default async function KalendarPage({
       <main className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-black text-slate-900 mb-8 tracking-tighter uppercase">Raspored Nastave</h1>
 
-        {/* --- OBAVEŠTENJA (SUCCESS / ERROR) --- */}
         <div className="mb-8 space-y-4">
-          {/* Poruka za USPEŠNU evidenciju */}
           {success === "attended" && (
             <div className="bg-emerald-500 text-white p-5 rounded-[2rem] shadow-xl shadow-emerald-100 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 transition-all">
               <div className="bg-white/20 p-2 rounded-full">
@@ -77,7 +71,6 @@ export default async function KalendarPage({
             </div>
           )}
 
-          {/* Poruka za GREŠKU (Vreme) */}
           {error === "not_in_time" && (
             <div className="bg-amber-500 text-white p-5 rounded-[2rem] shadow-xl shadow-amber-100 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
               <span className="text-xl">⏰</span>
@@ -88,7 +81,6 @@ export default async function KalendarPage({
             </div>
           )}
 
-          {/* Poruka za GREŠKU (Baza/Duplikat) */}
           {error === "database_error" && (
             <div className="bg-red-500 text-white p-5 rounded-[2rem] shadow-xl shadow-red-100 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
               <span className="text-xl">❌</span>
@@ -100,7 +92,6 @@ export default async function KalendarPage({
           )}
         </div>
 
-        {/* Pretraga */}
         <form className="mb-12 relative">
           <input 
             name="q"
@@ -114,10 +105,8 @@ export default async function KalendarPage({
           </button>
         </form>
 
-        {/* Kartice sa rasporedom */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {rezultatiIzBaze.map((termin) => {
-            // Provera da li je termin trenutno aktivan
             const jeAktivno = termin.dan_u_nedelji === trenutniDan && 
                              trenutnoVreme >= termin.vreme_pocetka.slice(0, 5) && 
                              trenutnoVreme <= termin.vreme_zavrsetka.slice(0, 5);
@@ -180,7 +169,6 @@ export default async function KalendarPage({
           })}
         </div>
 
-        {/* Empty State */}
         {rezultatiIzBaze.length === 0 && (
           <div className="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
             <p className="text-slate-300 font-black uppercase tracking-[0.3em] text-xs">

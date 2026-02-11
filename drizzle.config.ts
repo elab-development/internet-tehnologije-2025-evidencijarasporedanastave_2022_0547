@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  // Ovde menjaš putanju
   out: './src/db/migrations', 
   schema: './src/db/schema.ts',
   dialect: 'postgresql',

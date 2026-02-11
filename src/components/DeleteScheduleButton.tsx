@@ -1,5 +1,4 @@
-"use client"; // Ovo govori Next.js-u da je ovo Client Komponenta
-
+"use client";
 import { obrisiRaspored } from "@/app/actions";
 
 interface DeleteProps {

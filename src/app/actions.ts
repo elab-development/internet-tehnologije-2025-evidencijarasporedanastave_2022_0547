@@ -8,7 +8,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 
-// --- SEKCIJA 1: KORISNICI ---
 
 export async function dodajKorisnika(formData: FormData): Promise<void> {
   const ime = formData.get("ime") as string;
@@ -45,7 +44,6 @@ export async function adminAzurirajKorisnika(formData: FormData) {
   redirect("/admin");
 }
 
-// --- SEKCIJA 2: PROFIL I LOGOUT ---
 
 export async function azurirajProfil(formData: FormData) {
   const id = formData.get("id") as string;
@@ -76,7 +74,6 @@ export async function azurirajProfil(formData: FormData) {
   revalidatePath("/student");
   revalidatePath("/admin");
   
-  // PREUSMERAVANJE NA ADMIN STRANICU
   redirect("/admin");
 }
 
@@ -87,7 +84,6 @@ export async function logoutAkcija() {
     redirect('/login');
 }
 
-// --- SEKCIJA 3: PRISUSTVO ---
 
 export async function evidentirajPrisustvo(formData: FormData) {
   const korisnikId = formData.get("korisnikId") as string;
@@ -113,7 +109,6 @@ export async function evidentirajPrisustvo(formData: FormData) {
   redirect("/student?success=true");
 }
 
-// --- SEKCIJA 4: KALENDAR (DODAVANJE, IZMENA, BRISANJE) ---
 
 export async function adminDodajRaspored(formData: FormData) {
   const predmetId = formData.get("predmetId") as string;

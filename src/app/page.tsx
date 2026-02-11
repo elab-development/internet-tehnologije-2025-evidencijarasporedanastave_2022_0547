@@ -27,7 +27,6 @@ export default async function HomePage() {
           </h1>
         </div>
 
-        {/* TEST FORMA ZA BAZU - Integrisana u dizajn */}
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-10">
           <h2 className="text-xl font-bold mb-4">Dodaj novog korisnika u bazu:</h2>
           <form action={dodajKorisnika} className="flex gap-4">
@@ -53,7 +52,6 @@ export default async function HomePage() {
           </form>
         </div>
 
-        {/* LISTA KORISNIKA IZ PRAVE BAZE */}
         <div className="grid gap-4 mb-10">
           <h2 className="text-2xl font-bold text-slate-800">Korisnici u PostgreSQL bazi:</h2>
           {sviKorisniciIzBaze.map((u) => (
@@ -64,7 +62,6 @@ export default async function HomePage() {
           ))}
         </div>
 
-        {/* TVOJ POSTOJEĆI DIZAJN DUGMETA */}
         <div className="bg-white border border-slate-200 rounded-[2rem] p-12 text-center shadow-2xl shadow-blue-100/50 relative overflow-hidden">
           <div className="relative z-10">
             <h3 className="text-3xl font-bold text-slate-800 mb-4">Sve radi kako treba?</h3>

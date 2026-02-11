@@ -75,7 +75,6 @@ export default function RegisterPage() {
         ) : (
             
           <form onSubmit={handleRegister} className="space-y-5">
-            {/* Ime */}
             <div>
               <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 Ime i prezime
@@ -88,7 +87,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Username */}
             <div>
               <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 Username
@@ -101,7 +99,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 Institucionalni Email
@@ -115,7 +112,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Lozinka */}
             <div>
               <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 Lozinka
