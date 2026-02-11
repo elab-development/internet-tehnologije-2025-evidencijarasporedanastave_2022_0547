@@ -47,9 +47,9 @@ CREATE TABLE "raspored" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
-ALTER TABLE "prisustvo" ADD CONSTRAINT "prisustvo_korisnik_id_korisnik_id_fk" FOREIGN KEY ("korisnik_id") REFERENCES "public"."korisnik"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "prisustvo" ADD CONSTRAINT "prisustvo_raspored_id_raspored_id_fk" FOREIGN KEY ("raspored_id") REFERENCES "public"."raspored"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "raspored" ADD CONSTRAINT "raspored_predmet_id_predmet_id_fk" FOREIGN KEY ("predmet_id") REFERENCES "public"."predmet"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "prisustvo" ADD CONSTRAINT "prisustvo_korisnik_id_korisnik_id_fk" FOREIGN KEY ("korisnik_id") REFERENCES "public"."korisnik"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "prisustvo" ADD CONSTRAINT "prisustvo_raspored_id_raspored_id_fk" FOREIGN KEY ("raspored_id") REFERENCES "public"."raspored"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "raspored" ADD CONSTRAINT "raspored_predmet_id_predmet_id_fk" FOREIGN KEY ("predmet_id") REFERENCES "public"."predmet"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "raspored" ADD CONSTRAINT "raspored_kalendar_id_kalendar_id_fk" FOREIGN KEY ("kalendar_id") REFERENCES "public"."kalendar"("id") ON DELETE no action ON UPDATE no action;
 
 ALTER TABLE "raspored" ADD COLUMN "kabinet" varchar(50);

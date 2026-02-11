@@ -21,7 +21,7 @@ export default async function TeacherCalendarPage() {
   if (!user || (user.role !== 'teacher' && user.role !== 'nastavnik')) {
     redirect("/login");
   }
-
+// komentar
   const mojiTermini = await db
     .select({
       id: raspored.id,
