@@ -20,26 +20,19 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   const student = ulogovaniKorisnici[0];
   if (!student || student.role !== 'student') redirect('/login');
 
-  // --- 1. DOBIJANJE TRENUTNOG VREMENA (SRBIJA) ---
   const sad = new Date();
   
-  // Sat i minut (npr. "14:30")
   const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { 
     hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Belgrade' 
   });
 
-  // Dobijanje dana u nedelji kao broj (1 = Ponedeljak, ..., 7 = Nedelja)
-  // JS getDay() daje: 0 za Nedelju, 1 za Pon, 2 za Uto...
   const jsDan = sad.getDay(); 
   const danasnjiIndex = jsDan === 0 ? 7 : jsDan; 
 
-  // Mapiranje naziva dana iz baze u brojeve radi poređenja
   const mapiranjeDana: Record<string, number> = {
     "ponedeljak": 1, "utorak": 2, "sreda": 3, "četvrtak": 4, "petak": 5, "subota": 6, "nedelja": 7,
-    "ponedjeljak": 1, "srijeda": 3, "cetvrtak": 4 // dodato za svaki slučaj
   };
 
-  // --- 2. PODACI IZ BAZE ---
   const podaci = await db
     .select({ 
       id: raspored.id,
@@ -56,19 +49,11 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
       eq(prisustvo.korisnikId, student.id)
     ));
 
-  // --- 3. LOGIKA ZA FILTRIRANJE ODRŽANIH PREDAVANJA ---
   const odrzanaPredavanja = podaci.filter(p => {
-    // Normalizujemo naziv dana iz baze (mala slova, bez razmaka)
     const danIzBaze = p.dan.toLowerCase().trim();
     const terminIndex = mapiranjeDana[danIzBaze] || 0;
 
-    // DEBUG (vidi ovo u terminalu gde si pokrenuo npm run dev)
-    // console.log(`Provera termina: ${p.nazivPredmeta}, Dan: ${danIzBaze}(${terminIndex}), Danas: ${danasnjiIndex}`);
-
-    // Ako je dan u nedelji prošao
     if (terminIndex < danasnjiIndex && terminIndex !== 0) return true;
-
-    // Ako je dan isti kao danasnji, proveri vreme pocetka
     if (terminIndex === danasnjiIndex) {
       const pocetakTermina = p.pocetak.slice(0, 5);
       return trenutnoVreme >= pocetakTermina;
@@ -80,7 +65,6 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   const brojDolazaka = odrzanaPredavanja.filter(p => p.status === 'Prisutan').length;
   const ukupnoOdrzano = odrzanaPredavanja.length;
 
-  // Aktivna (trenutno u toku)
   const aktivniTermini = podaci.filter(p => {
     const danIzBaze = p.dan.toLowerCase().trim();
     const terminIndex = mapiranjeDana[danIzBaze] || 0;
