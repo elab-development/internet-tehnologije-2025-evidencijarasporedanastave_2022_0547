@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+//autentifikaciona ruta
+
 export async function POST() {
   try {
   

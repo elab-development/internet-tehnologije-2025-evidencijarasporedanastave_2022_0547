@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+//interna API ruta
+
 export async function GET() {
   try {
     const cookieStore = await cookies();

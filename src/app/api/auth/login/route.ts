@@ -3,6 +3,8 @@ import { korisnik } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
+//autentifikaciona ruta
+
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();

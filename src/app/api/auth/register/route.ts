@@ -2,6 +2,8 @@ import { db } from '@/db';
 import { korisnik } from '@/db/schema';
 import { NextResponse } from 'next/server';
 
+//autentifikaciona ruta
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

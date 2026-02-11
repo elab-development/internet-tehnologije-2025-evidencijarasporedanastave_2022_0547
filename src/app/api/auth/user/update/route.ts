@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+//API ruta
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
