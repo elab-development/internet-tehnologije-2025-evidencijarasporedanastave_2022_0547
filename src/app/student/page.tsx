@@ -8,6 +8,16 @@ import Link from 'next/link';
 import { evidentirajPrisustvo } from "@/app/actions";
 import AttendanceStats from '@/components/AttendanceStats'; 
 
+async function getRandomQuote() {
+  try {
+    const res = await fetch('https://api.adviceslip.com/advice', { cache: 'no-store' });
+    const data = await res.json();
+    return data.slip.advice;
+  } catch (error) {
+    return "Uči naporno, uspeh će doći!";
+  }
+}
+
 export default async function StudentPage({ searchParams }: { searchParams: Promise<{ success?: string }> }) {
   const params = await searchParams;
   const success = params.success === "true";
@@ -20,6 +30,12 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   const student = ulogovaniKorisnici[0];
   if (!student || student.role !== 'student') redirect('/login');
 
+  // Pozivamo API za citat
+  const motivationQuote = await getRandomQuote();
+
+  // --- API 2: DICEBEAR AVATAR URL ---
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(ulogovaniEmail)}`;
+
   const sad = new Date();
   
   const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { 
@@ -28,6 +44,10 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
 
   const jsDan = sad.getDay(); 
   const danasnjiIndex = jsDan === 0 ? 7 : jsDan; 
+
+  // Mapiranje za prikaz imena dana u UI-u
+  const naziviDanaZaPrikaz = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"];
+  const imeDanasnjegDana = naziviDanaZaPrikaz[jsDan];
 
   const mapiranjeDana: Record<string, number> = {
     "ponedeljak": 1, "utorak": 2, "sreda": 3, "četvrtak": 4, "petak": 5, "subota": 6, "nedelja": 7,
@@ -58,7 +78,6 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
       const pocetakTermina = p.pocetak.slice(0, 5);
       return trenutnoVreme >= pocetakTermina;
     }
-
     return false;
   });
 
@@ -78,8 +97,28 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar userName={student.ime} userRole={student.role} />
+      
       <main className="max-w-4xl mx-auto px-6 py-16">
         
+        {/* SEKCIJA SA AVATAROM I CITATOM */}
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row items-center gap-6">
+          <img 
+            src={avatarUrl} 
+            alt="Student Avatar" 
+            className="w-24 h-24 rounded-full bg-blue-50 border-2 border-blue-100 shadow-inner"
+          />
+          <div className="flex-1 text-center md:text-left">
+            <h1 className="text-2xl font-black uppercase tracking-tight text-slate-800">
+              Dobrodošao nazad, <span className="text-blue-600">{student.ime}</span>
+            </h1>
+            <div className="mt-2 p-3 bg-slate-50 rounded-2xl border-l-4 border-blue-500">
+              <p className="text-sm italic text-slate-600 font-medium">
+                "{motivationQuote}"
+              </p>
+            </div>
+          </div>
+        </div>
+
         <AttendanceStats 
           totalHeldTerms={ukupnoOdrzano} 
           attendedTerms={brojDolazaka} 
@@ -90,17 +129,16 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
               <h2 className="text-5xl font-black tracking-tighter uppercase leading-none">
                 <span className="text-blue-600">Aktivno</span> Predavanje
               </h2>
-              {/* DODATO DUGME PROFIL */}
               <Link href="/student/profil" className="inline-block mt-4 border-2 border-slate-200 text-slate-600 px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all">
-                Profil
+                Podešavanja Profila
               </Link>
             </div>
             <div className="text-right">
                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
-                  Danas je index: {danasnjiIndex}
+                 Dan: {imeDanasnjegDana}
                </p>
                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
-                  Vreme: {trenutnoVreme}h
+                 Vreme: {trenutnoVreme}h
                </p>
             </div>
         </div>
@@ -123,7 +161,7 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
                   <input type="hidden" name="rasporedId" value={termin.id} />
                   <button 
                     disabled={termin.status === 'Prisutan'}
-                    className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest disabled:bg-slate-100 disabled:text-slate-400"
+                    className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest disabled:bg-slate-100 disabled:text-slate-400 shadow-lg shadow-blue-200"
                   >
                     {termin.status === 'Prisutan' ? '✅ Potvrđeno' : 'Potvrdi Prisustvo'}
                   </button>
