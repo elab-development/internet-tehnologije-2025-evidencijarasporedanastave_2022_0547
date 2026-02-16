@@ -12,5 +12,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  app:
+    build: .
+    container_name: nextjs_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@db:5432/evidencija_nastave_db
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
