@@ -1,12 +1,14 @@
 import { db } from "@/db";
 import { raspored, predmet, korisnik } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm"; // Sklonjen leftJoin odavde
 import Navbar from "@/components/navbar";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { adminDodajRaspored } from "@/app/actions";
 import DeleteScheduleButton from "@/components/DeleteScheduleButton";
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminCalendarPage() {
   const cookieStore = await cookies();
@@ -19,6 +21,7 @@ export default async function AdminCalendarPage() {
 
   const sviPredmeti = await db.select().from(predmet).orderBy(asc(predmet.naziv));
 
+  // .leftJoin je metoda, ne uvozi se posebno
   const savRaspored = await db
     .select({
       id: raspored.id,
@@ -29,7 +32,7 @@ export default async function AdminCalendarPage() {
       predmetNaziv: predmet.naziv,
     })
     .from(raspored)
-    .innerJoin(predmet, eq(raspored.predmetId, predmet.id))
+    .leftJoin(predmet, eq(raspored.predmetId, predmet.id)) 
     .orderBy(asc(raspored.vremePocetka));
 
   const radniDani = ["Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak"];
@@ -90,7 +93,11 @@ export default async function AdminCalendarPage() {
             </div>
 
             <div className="flex items-end">
-              <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-slate-200">
+              <button 
+                type="submit" 
+                suppressHydrationWarning
+                className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-slate-200"
+              >
                 Upiši u raspored
               </button>
             </div>
@@ -99,7 +106,7 @@ export default async function AdminCalendarPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {radniDani.map((dan) => {
-            const terminiZaDan = savRaspored.filter((r) => r.dan === dan);
+            const terminiZaDan = savRaspored.filter((r) => r.dan?.toLowerCase() === dan.toLowerCase());
             
             return (
               <div key={dan} className="flex flex-col gap-6">
@@ -120,7 +127,7 @@ export default async function AdminCalendarPage() {
                         <div className="flex justify-between items-start mb-4">
                           <div className="bg-slate-100 text-slate-800 px-3 py-1 rounded-full border border-slate-200 shadow-sm">
                             <span className="text-[10px] font-black tracking-tighter">
-                              {t.pocetak.slice(0, 5)} - {t.kraj.slice(0, 5)}
+                              {(t.pocetak || "").slice(0, 5)} - {(t.kraj || "").slice(0, 5)}
                             </span>
                           </div>
                           
@@ -133,7 +140,9 @@ export default async function AdminCalendarPage() {
                           </div>
                         </div>
 
-                        <h4 className="font-black text-slate-800 text-xs uppercase leading-tight mb-4 min-h-[2rem]">{t.predmetNaziv}</h4>
+                        <h4 className="font-black text-slate-800 text-xs uppercase leading-tight mb-4 min-h-[2rem]">
+                          {t.predmetNaziv || "Nepoznat predmet"}
+                        </h4>
                         <div className="pt-4 border-t border-slate-50 flex justify-between items-center text-[10px] font-black">
                            <span className="text-slate-300 uppercase tracking-widest italic text-[8px]">Sala</span>
                            <span className="text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md">{t.kabinet}</span>

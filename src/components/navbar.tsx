@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CustomButton from './CustomButton';
 import { logoutAkcija } from '@/app/actions'; 
@@ -10,6 +10,12 @@ interface NavbarProps {
 }
 
 const Navbar = ({ userName, userRole }: NavbarProps) => {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const role = userRole?.toLowerCase().trim();
 
   const homePath = 
@@ -38,22 +44,25 @@ const Navbar = ({ userName, userRole }: NavbarProps) => {
           Kalendar
         </Link>
         
-        <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm" suppressHydrationWarning>
           <span className="text-[9px] font-black uppercase text-slate-400 mr-1">Status:</span>
           <span className="font-bold text-slate-800 text-xs">
-            {userName || "Učitavanje..."}
+            {isMounted ? (userName || "Korisnik") : "Učitavanje..."}
           </span>
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
         </div>
         
-        <CustomButton 
-          label="Odjavi se" 
-          variant="danger" 
-          onClick={async () => {
-            await logoutAkcija();
-            window.location.href = "/login";
-          }} 
-        />
+        {/* suppressHydrationWarning sprečava fdprocessedid grešku od McAfee-a */}
+        <div suppressHydrationWarning>
+          <CustomButton 
+            label="Odjavi se" 
+            variant="danger" 
+            onClick={async () => {
+              await logoutAkcija();
+              window.location.href = "/login";
+            }} 
+          />
+        </div>
       </div>
     </nav>
   );

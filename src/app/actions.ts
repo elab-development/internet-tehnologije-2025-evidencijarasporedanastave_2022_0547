@@ -75,7 +75,6 @@ export async function azurirajProfil(formData: FormData) {
 
   if (!id) return;
 
-  // IDOR ZAŠTITA: Korisnik može da ažurira samo svoj profil
   const provera = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail || "")).limit(1);
   if (!provera[0] || provera[0].id.toString() !== id) {
     throw new Error("Možete menjati samo sopstveni profil!");
@@ -117,7 +116,6 @@ export async function evidentirajPrisustvo(formData: FormData) {
   const korisnikId = formData.get("korisnikId") as string;
   const rasporedId = formData.get("rasporedId") as string;
 
-  // IDOR ZAŠTITA
   const provera = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail || "")).limit(1);
   if (!provera[0] || provera[0].id.toString() !== korisnikId) {
     redirect("/student?error=unauthorized");
@@ -153,32 +151,33 @@ export async function adminDodajRaspored(formData: FormData) {
   const admin = await proveriAdmina();
   if (!admin) throw new Error("Neovlašćen pristup!");
 
-  // Uzimamo podatke iz forme
-  const predmetIdRaw = formData.get("predmetId");
+  // Uzimamo podatke kao stringove
+  const predmetId = formData.get("predmetId") as string;
   const dan = formData.get("dan") as string;
   const pocetak = formData.get("pocetak") as string;
   const kraj = formData.get("kraj") as string;
   const kabinet = formData.get("kabinet") as string;
 
-  // Funkcija za formatiranje vremena (npr. 08:00 -> 08:00:00)
-  const formatVreme = (v: string) => v && v.length === 5 ? `${v}:00` : v;
+  // Formatiranje vremena za Postgres (HH:mm:ss)
+  const formatVreme = (v: string) => (v && v.length === 5 ? `${v}:00` : v);
 
   try {
+    // ISPRAVLJENO: predmetId se šalje kao string (UUID), bez Number()
     await db.insert(raspored).values({
-      // Pazi ovde: pretvaramo u broj i osiguravamo se da nije null
-      predmetId: Number(predmetIdRaw), 
+      predmetId: predmetId, 
       danUNedelji: dan,
       vremePocetka: formatVreme(pocetak),
       vremeZavrsetka: formatVreme(kraj),
       kabinet: kabinet,
-      nastavniDan: "Predavanja" // Proveri da li je u schema.ts "nastavniDan" ili "nastavniDay"
-    } as any); // Dodajemo "as any" samo ako Drizzle i dalje pravi problem sa tipovima, da bi build prosao
+      nastavniDan: "Predavanja"
+    });
+
+    revalidatePath("/admin/kalendar");
   } catch (error) {
     console.error("Greska pri upisu u raspored:", error);
   }
-
-  revalidatePath("/admin/kalendar");
 }
+
 export async function adminAzurirajRaspored(formData: FormData) {
   const admin = await proveriAdmina();
   if (!admin) throw new Error("Neovlašćen pristup!");
@@ -189,10 +188,13 @@ export async function adminAzurirajRaspored(formData: FormData) {
   const kraj = formData.get("kraj") as string;
   const kabinet = formData.get("kabinet") as string;
 
-  const formatVreme = (v: string) => v.length === 5 ? `${v}:00` : v;
+  const formatVreme = (v: string) => (v && v.length === 5 ? `${v}:00` : v);
 
   await db.update(raspored).set({
-    danUNedelji: dan, vremePocetka: formatVreme(pocetak), vremeZavrsetka: formatVreme(kraj), kabinet
+    danUNedelji: dan, 
+    vremePocetka: formatVreme(pocetak), 
+    vremeZavrsetka: formatVreme(kraj), 
+    kabinet
   }).where(eq(raspored.id, id));
 
   revalidatePath("/admin/kalendar");
@@ -206,8 +208,13 @@ export async function obrisiRaspored(formData: FormData) {
   const id = formData.get("id") as string;
   if (!id) return;
 
-  await db.delete(prisustvo).where(eq(prisustvo.rasporedId, id));
-  await db.delete(raspored).where(eq(raspored.id, id));
+  try {
+    // Prvo brišemo prisustva zbog stranih ključeva (Foreign Key)
+    await db.delete(prisustvo).where(eq(prisustvo.rasporedId, id));
+    await db.delete(raspored).where(eq(raspored.id, id));
+  } catch (err) {
+    console.error("Greska pri brisanju:", err);
+  }
 
   revalidatePath("/admin/kalendar");
   revalidatePath("/student");
