@@ -15,6 +15,13 @@
       "when": 1770369801239,
       "tag": "0001_third_nightmare",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771946053628,
+      "tag": "0002_flawless_black_panther",
+      "breakpoints": true
     }
   ]
 }

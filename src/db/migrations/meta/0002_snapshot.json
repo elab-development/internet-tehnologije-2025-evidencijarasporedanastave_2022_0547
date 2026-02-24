@@ -1,0 +1,411 @@
+{
+  "id": "f9c7fad6-6b8a-494b-9d09-26f80b70fedd",
+  "prevId": "4836db89-7ec7-483e-b9f2-ad5f4d1e445e",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.kalendar": {
+      "name": "kalendar",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "datum": {
+          "name": "datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opis": {
+          "name": "opis",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.korisnik": {
+      "name": "korisnik",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ime": {
+          "name": "ime",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "korisnik_slug_unique": {
+          "name": "korisnik_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        },
+        "korisnik_email_unique": {
+          "name": "korisnik_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.predmet": {
+      "name": "predmet",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "naziv": {
+          "name": "naziv",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opis": {
+          "name": "opis",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nastavnik_id": {
+          "name": "nastavnik_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "predmet_nastavnik_id_korisnik_id_fk": {
+          "name": "predmet_nastavnik_id_korisnik_id_fk",
+          "tableFrom": "predmet",
+          "tableTo": "korisnik",
+          "columnsFrom": [
+            "nastavnik_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "predmet_slug_unique": {
+          "name": "predmet_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.prisustvo": {
+      "name": "prisustvo",
+      "schema": "",
+      "columns": {
+        "korisnik_id": {
+          "name": "korisnik_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raspored_id": {
+          "name": "raspored_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datum_prisustva": {
+          "name": "datum_prisustva",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "prisustvo_korisnik_id_korisnik_id_fk": {
+          "name": "prisustvo_korisnik_id_korisnik_id_fk",
+          "tableFrom": "prisustvo",
+          "tableTo": "korisnik",
+          "columnsFrom": [
+            "korisnik_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "prisustvo_raspored_id_raspored_id_fk": {
+          "name": "prisustvo_raspored_id_raspored_id_fk",
+          "tableFrom": "prisustvo",
+          "tableTo": "raspored",
+          "columnsFrom": [
+            "raspored_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "prisustvo_korisnik_id_raspored_id_datum_prisustva_pk": {
+          "name": "prisustvo_korisnik_id_raspored_id_datum_prisustva_pk",
+          "columns": [
+            "korisnik_id",
+            "raspored_id",
+            "datum_prisustva"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.raspored": {
+      "name": "raspored",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "dan_u_nedelji": {
+          "name": "dan_u_nedelji",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vreme_pocetka": {
+          "name": "vreme_pocetka",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vreme_zavrsetka": {
+          "name": "vreme_zavrsetka",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nastavni_dan": {
+          "name": "nastavni_dan",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "predmet_id": {
+          "name": "predmet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kalendar_id": {
+          "name": "kalendar_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kabinet": {
+          "name": "kabinet",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "raspored_predmet_id_predmet_id_fk": {
+          "name": "raspored_predmet_id_predmet_id_fk",
+          "tableFrom": "raspored",
+          "tableTo": "predmet",
+          "columnsFrom": [
+            "predmet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "raspored_kalendar_id_kalendar_id_fk": {
+          "name": "raspored_kalendar_id_kalendar_id_fk",
+          "tableFrom": "raspored",
+          "tableTo": "kalendar",
+          "columnsFrom": [
+            "kalendar_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.reset_zahtev": {
+      "name": "reset_zahtev",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vreme": {
+          "name": "vreme",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
