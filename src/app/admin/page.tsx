@@ -33,16 +33,34 @@ export default async function AdminPage() {
       <Navbar userName={adminPodaci.ime} userRole={adminPodaci.role} />
       <main className="max-w-6xl mx-auto px-6 py-16">
         
-        {/* Header Sekcija */}
+        {/* Header Sekcija sa dugmićima */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
           <div>
             <span className="bg-red-100 text-red-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Admin Control</span>
-            <h1 className="text-6xl font-black text-slate-900 mt-6 tracking-tighter uppercase leading-none">Upravljanje <span className="text-red-600">Sistemom</span></h1>
+            <h1 className="text-6xl font-black text-slate-900 mt-6 tracking-tighter uppercase leading-none">
+              Upravljanje <span className="text-red-600">Sistemom</span>
+            </h1>
           </div>
-          <Link href="/admin/kalendar" className="bg-white border-2 border-slate-900 p-4 rounded-2xl font-black uppercase text-xs hover:bg-slate-900 hover:text-white transition-all">📅 Kalendar Nastave</Link>
+          
+          {/* KONTEJNER ZA NAVIGACIONA DUGMAD */}
+          <div className="flex flex-wrap gap-3">
+            <Link 
+              href="/admin/statistika" 
+              className="bg-white border-2 border-blue-600 text-blue-600 p-4 rounded-2xl font-black uppercase text-xs hover:bg-blue-600 hover:text-white transition-all shadow-sm flex items-center gap-2"
+            >
+              📊 Analitički Pregled
+            </Link>
+
+            <Link 
+              href="/admin/kalendar" 
+              className="bg-white border-2 border-slate-900 p-4 rounded-2xl font-black uppercase text-xs hover:bg-slate-900 hover:text-white transition-all shadow-sm flex items-center gap-2"
+            >
+              📅 Kalendar Nastave
+            </Link>
+          </div>
         </div>
 
-        {/* 1. RESET ZAHTEVI (Ovo smo dodali) */}
+        {/* 1. RESET ZAHTEVI */}
         <ResetRequests />
 
         {/* 2. FORMA ZA UPIS */}
@@ -53,7 +71,13 @@ export default async function AdminPage() {
               <input name="ime" placeholder="Ime i Prezime" className="bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-red-600" required />
               <input name="email" type="email" placeholder="Email adresa" className="bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-red-600" required />
             </div>
-            <button type="submit" className="bg-red-600 text-white p-4 rounded-2xl font-black uppercase text-[10px] tracking-widest self-start">Kreiraj nalog</button>
+            <button 
+              type="submit" 
+              suppressHydrationWarning
+              className="bg-red-600 text-white p-4 rounded-2xl font-black uppercase text-[10px] tracking-widest self-start"
+            >
+              Kreiraj nalog
+            </button>
           </form>
         </div>
 
