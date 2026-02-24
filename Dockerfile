@@ -14,7 +14,7 @@ COPY . .
 
 # Isključujemo proveru tipova i linting tokom build-a da bi prošlo brže (opciono)
 ENV NEXT_TELEMETRY_DISABLED 1
-RUN npm run build
+RUN NEXT_TELEMETRY_DISABLED=1 npx next build --no-lint
 
 # 3. FAZA: Finalna produkciona slika
 FROM node:18-alpine AS runner
