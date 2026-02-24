@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { db } from "@/db";
 import { korisnik } from "@/db/schema";
 import { dodajKorisnika } from "./actions"; // Uvezi akciju koju smo napravili
