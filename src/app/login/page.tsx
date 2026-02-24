@@ -9,8 +9,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();  //sprecava da se osvezi cela stranica
-    setError(''); 
+    e.preventDefault();
+    setError('');
+    
+    // MALA IZMENA: Klijentska validacija pre slanja na server
+    if (!email.endsWith('.rs')) {
+      setError('Molimo koristite ispravnu institucionalnu adresu (@fon.rs)');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -96,17 +103,20 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-  <p className="text-sm text-slate-500">
-    Nemaš nalog?{" "}
-    <a
-      href="/register"
-      className="font-bold text-blue-600 hover:underline"
-    >
-      Registruj se
-    </a>
-  </p>
-</div>
+        <div className="mt-6 text-center space-y-2">
+          <p className="text-sm text-slate-500">
+            Nemaš nalog?{" "}
+            <a href="/register" className="font-bold text-blue-600 hover:underline">
+              Registruj se
+            </a>
+          </p>
+          {/* MALA UI DOPUNA */}
+          <p>
+            <a href="#" className="text-xs text-slate-400 hover:text-blue-500 transition-colors">
+              Zaboravili ste lozinku?
+            </a>
+          </p>
+        </div>
         
         <div className="mt-12 pt-8 border-t border-slate-50 text-center">
           <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
