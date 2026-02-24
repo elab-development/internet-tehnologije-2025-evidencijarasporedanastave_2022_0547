@@ -30,10 +30,8 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   const student = ulogovaniKorisnici[0];
   if (!student || student.role !== 'student') redirect('/login');
 
-  // Pozivamo API za citat
   const motivationQuote = await getRandomQuote();
 
-  // --- API 2: DICEBEAR AVATAR URL ---
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(ulogovaniEmail)}`;
 
   const sad = new Date();
@@ -45,7 +43,6 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   const jsDan = sad.getDay(); 
   const danasnjiIndex = jsDan === 0 ? 7 : jsDan; 
 
-  // Mapiranje za prikaz imena dana u UI-u
   const naziviDanaZaPrikaz = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"];
   const imeDanasnjegDana = naziviDanaZaPrikaz[jsDan];
 
