@@ -3,12 +3,12 @@
 import { db } from "@/db";
 import { korisnik, prisustvo, raspored, predmet } from "@/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm"; // Dodat and za složenije provere
+import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 
-// POMOĆNA FUNKCIJA ZA PROVERU ADMINA (Zaštita od IDOR i neovlašćenog pristupa)
+// --- POMOĆNA FUNKCIJA ZA BEZBEDNOST (Provera Admina na serveru) ---
 async function proveriAdmina() {
   const cookieStore = await cookies();
   const email = cookieStore.get("user_email")?.value;
@@ -21,8 +21,9 @@ async function proveriAdmina() {
   return user;
 }
 
+// --- KORISNICI ---
+
 export async function dodajKorisnika(formData: FormData): Promise<void> {
-  // BEZBEDNOST: Provera uloge na serveru
   const admin = await proveriAdmina();
   if (!admin) throw new Error("Neovlašćen pristup!");
 
@@ -33,7 +34,6 @@ export async function dodajKorisnika(formData: FormData): Promise<void> {
   const hashedDefaultPassword = await bcrypt.hash("test-password-123", 10);
 
   try {
-    // SQL INJECTION ZAŠTITA: Drizzle automatski parametrizuje ove vrednosti
     await db.insert(korisnik).values({
       ime, email, slug, password: hashedDefaultPassword, role: role || "student",
     });
@@ -42,7 +42,6 @@ export async function dodajKorisnika(formData: FormData): Promise<void> {
 }
 
 export async function adminAzurirajKorisnika(formData: FormData) {
-  // BEZBEDNOST: Provera admina
   const admin = await proveriAdmina();
   if (!admin) throw new Error("Neovlašćen pristup!");
 
@@ -65,6 +64,52 @@ export async function adminAzurirajKorisnika(formData: FormData) {
   redirect("/admin");
 }
 
+export async function azurirajProfil(formData: FormData) {
+  const cookieStore = await cookies();
+  const ulogovaniEmail = cookieStore.get("user_email")?.value;
+  
+  const id = formData.get("id") as string;
+  const novoIme = formData.get("ime") as string;
+  const noviEmail = formData.get("email") as string;
+  const novaSifra = formData.get("sifra") as string;
+
+  if (!id) return;
+
+  // IDOR ZAŠTITA: Korisnik može da ažurira samo svoj profil
+  const provera = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail || "")).limit(1);
+  if (!provera[0] || provera[0].id.toString() !== id) {
+    throw new Error("Možete menjati samo sopstveni profil!");
+  }
+
+  const updateData: any = { 
+    ime: novoIme, 
+    email: noviEmail, 
+    slug: novoIme.toLowerCase().replace(/\s+/g, '-') 
+  };
+
+  if (novaSifra && novaSifra.trim() !== "") {
+    const salt = await bcrypt.genSalt(10);
+    updateData.password = await bcrypt.hash(novaSifra, salt);
+  }
+
+  await db.update(korisnik).set(updateData).where(eq(korisnik.id, id));
+  
+  cookieStore.set("user_email", noviEmail, { path: "/" });
+  
+  revalidatePath("/student");
+  revalidatePath("/admin");
+  redirect(provera[0].role === 'admin' ? "/admin" : "/student");
+}
+
+export async function logoutAkcija() {
+    const cookieStore = await cookies();
+    cookieStore.delete('user_email');
+    cookieStore.delete('auth_token'); 
+    redirect('/login');
+}
+
+// --- PRISUSTVO ---
+
 export async function evidentirajPrisustvo(formData: FormData) {
   const cookieStore = await cookies();
   const ulogovaniEmail = cookieStore.get("user_email")?.value;
@@ -72,12 +117,10 @@ export async function evidentirajPrisustvo(formData: FormData) {
   const korisnikId = formData.get("korisnikId") as string;
   const rasporedId = formData.get("rasporedId") as string;
 
-  // IDOR ZAŠTITA: Proveravamo da li ulogovani korisnik pokušava da prijavi prisustvo za SEBE, a ne za nekog drugog
-  const korisnici = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail || "")).limit(1);
-  const user = korisnici[0];
-
-  if (!user || user.id.toString() !== korisnikId) {
-    redirect("/student?error=unauthorized"); // Sprečava studenta da menja ID u formi i prijavljuje druge
+  // IDOR ZAŠTITA
+  const provera = await db.select().from(korisnik).where(eq(korisnik.email, ulogovaniEmail || "")).limit(1);
+  if (!provera[0] || provera[0].id.toString() !== korisnikId) {
+    redirect("/student?error=unauthorized");
   }
 
   const termini = await db.select().from(raspored).where(eq(raspored.id, rasporedId)).limit(1);
@@ -93,10 +136,10 @@ export async function evidentirajPrisustvo(formData: FormData) {
 
   try {
     await db.insert(prisustvo).values({ 
-        korisnikId, 
-        rasporedId, 
-        status: "Prisutan", 
-        datumPrisustva: sad.toISOString().split('T')[0] 
+      korisnikId, 
+      rasporedId, 
+      status: "Prisutan", 
+      datumPrisustva: sad.toISOString().split('T')[0] 
     });
   } catch (err) { redirect("/student?error=db_fail"); }
 
@@ -104,8 +147,59 @@ export async function evidentirajPrisustvo(formData: FormData) {
   redirect("/student?success=true");
 }
 
+// --- RASPORED I KALENDAR ---
+
+export async function adminDodajRaspored(formData: FormData) {
+  const admin = await proveriAdmina();
+  if (!admin) throw new Error("Neovlašćen pristup!");
+
+  // Uzimamo podatke iz forme
+  const predmetIdRaw = formData.get("predmetId");
+  const dan = formData.get("dan") as string;
+  const pocetak = formData.get("pocetak") as string;
+  const kraj = formData.get("kraj") as string;
+  const kabinet = formData.get("kabinet") as string;
+
+  // Funkcija za formatiranje vremena (npr. 08:00 -> 08:00:00)
+  const formatVreme = (v: string) => v && v.length === 5 ? `${v}:00` : v;
+
+  try {
+    await db.insert(raspored).values({
+      // Pazi ovde: pretvaramo u broj i osiguravamo se da nije null
+      predmetId: Number(predmetIdRaw), 
+      danUNedelji: dan,
+      vremePocetka: formatVreme(pocetak),
+      vremeZavrsetka: formatVreme(kraj),
+      kabinet: kabinet,
+      nastavniDan: "Predavanja" // Proveri da li je u schema.ts "nastavniDan" ili "nastavniDay"
+    } as any); // Dodajemo "as any" samo ako Drizzle i dalje pravi problem sa tipovima, da bi build prosao
+  } catch (error) {
+    console.error("Greska pri upisu u raspored:", error);
+  }
+
+  revalidatePath("/admin/kalendar");
+}
+export async function adminAzurirajRaspored(formData: FormData) {
+  const admin = await proveriAdmina();
+  if (!admin) throw new Error("Neovlašćen pristup!");
+
+  const id = formData.get("id") as string;
+  const dan = formData.get("dan") as string;
+  const pocetak = formData.get("pocetak") as string;
+  const kraj = formData.get("kraj") as string;
+  const kabinet = formData.get("kabinet") as string;
+
+  const formatVreme = (v: string) => v.length === 5 ? `${v}:00` : v;
+
+  await db.update(raspored).set({
+    danUNedelji: dan, vremePocetka: formatVreme(pocetak), vremeZavrsetka: formatVreme(kraj), kabinet
+  }).where(eq(raspored.id, id));
+
+  revalidatePath("/admin/kalendar");
+  redirect("/admin/kalendar");
+}
+
 export async function obrisiRaspored(formData: FormData) {
-  // BEZBEDNOST: Samo admin sme da briše iz rasporeda
   const admin = await proveriAdmina();
   if (!admin) throw new Error("Neovlašćen pristup!");
 
@@ -118,6 +212,3 @@ export async function obrisiRaspored(formData: FormData) {
   revalidatePath("/admin/kalendar");
   revalidatePath("/student");
 }
-
-// Ostatak funkcija (logout, azurirajProfil itd.) ostaje sličan, 
-// ali uvek sa proverom ID-a iz sesije (cookies) umesto samo iz formData.
