@@ -23,7 +23,7 @@ jobs:
         run: npm install
 
       - name: Pokreni testove
-        run: npm test || echo "Nema testova, preskacem..."
+        run: npm run test
 
       - name: Build Docker Image
         run: docker build -t moj-projekat:latest .
