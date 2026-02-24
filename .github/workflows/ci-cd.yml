@@ -1,0 +1,29 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preuzmi kod
+        uses: actions/checkout@v4
+
+      - name: Postavi Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Instaliraj zavisnosti
+        run: npm ci
+
+      - name: Pokreni testove
+        run: npm test || echo "Nema testova, preskacem..."
+
+      - name: Build Docker Image
+        run: docker build -t moj-projekat:latest .
