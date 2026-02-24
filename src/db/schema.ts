@@ -1,5 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, time, date, primaryKey } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
+import { serial, text} from "drizzle-orm/pg-core";
 
 // --- TABELE ---
 
@@ -52,6 +53,7 @@ export const prisustvo = pgTable('prisustvo', {
 }));
 
 
+
 // --- RELACIJE ---
 
 export const korisnikRelations = relations(korisnik, ({ many }) => ({
@@ -78,3 +80,11 @@ export const prisustvoRelations = relations(prisustvo, ({ one }) => ({
   korisnik: one(korisnik, { fields: [prisustvo.korisnikId], references: [korisnik.id] }),
   raspored: one(raspored, { fields: [prisustvo.rasporedId], references: [raspored.id] }),
 }));
+
+
+// Dodaj ovo na kraj fajla schema.ts
+export const resetZahtev = pgTable("reset_zahtev", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  vreme: timestamp("vreme").defaultNow(),
+});
