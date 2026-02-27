@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { evidentirajPrisustvo } from "@/app/actions";
 import AttendanceStats from '@/components/AttendanceStats'; 
-
+// Eksterni API za citate
 async function getRandomQuote() {
   try {
     const res = await fetch('https://api.adviceslip.com/advice', { cache: 'no-store' });
@@ -31,7 +31,7 @@ export default async function StudentPage({ searchParams }: { searchParams: Prom
   if (!student || student.role !== 'student') redirect('/login');
 
   const motivationQuote = await getRandomQuote();
-
+//Drugi eksterni API
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(ulogovaniEmail)}`;
 
   const sad = new Date();

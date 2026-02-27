@@ -1,24 +1,21 @@
-# 1. FAZA: Deps
 FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-# 2. FAZA: Builder
+# Pravljenje aplikacije
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# DODAJEMO LAŽNU DATABASE_URL DA BUILD NE PUKNE
+# Dodavanje lazne databaze
 ENV DATABASE_URL="postgres://user:password@localhost:5432/db"
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Build bez provere linta i tipova
 RUN npx next build --no-lint
 
-# 3. FAZA: Runner
+# Pokretanje
 FROM node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

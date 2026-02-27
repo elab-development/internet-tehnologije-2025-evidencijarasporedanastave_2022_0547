@@ -27,12 +27,11 @@ export default function ApiDocPage() {
         cookieAuth: {
           type: 'apiKey',
           in: 'cookie',
-          name: 'session', // Pretpostavka na osnovu Next.js auth praksi
+          name: 'session',
         },
       },
     },
     paths: {
-      // --- AUTH SEKCIJA ---
       '/api/auth/login': {
         post: {
           tags: ['Autentifikacija'],
@@ -90,7 +89,6 @@ export default function ApiDocPage() {
         }
       },
 
-      // --- USER SEKCIJA ---
       '/api/user/profile': {
         get: {
           tags: ['Korisnik'],
@@ -110,7 +108,6 @@ export default function ApiDocPage() {
         }
       },
 
-      // --- RASPORED & PRISUSTVO ---
       '/api/raspored': {
         get: {
           tags: ['Raspored'],
@@ -151,7 +148,6 @@ export default function ApiDocPage() {
         }
       },
 
-      // --- KALENDAR ---
       '/api/kalendar': {
         get: {
           tags: ['Kalendar'],
