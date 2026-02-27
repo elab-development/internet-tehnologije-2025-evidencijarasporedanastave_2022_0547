@@ -8,14 +8,12 @@ interface StatsProps {
 }
 
 export default function StatsDashboard({ userStats, scheduleStats }: StatsProps) {
-  // TRIK ZA HYDRATION: Proveravamo da li je komponenta montirana u browseru
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Dok se ne ucita u browseru, prikazujemo prazan prostor ili loader
   if (!isMounted) {
     return <div className="p-10 text-center font-bold text-slate-400 uppercase text-xs tracking-widest">Učitavanje analitike...</div>;
   }

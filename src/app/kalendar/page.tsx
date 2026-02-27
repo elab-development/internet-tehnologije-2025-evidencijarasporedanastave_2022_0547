@@ -29,10 +29,18 @@ export default async function KalendarPage({
   const korisnikPodaci = ulogovaniKorisnici[0];
   if (!korisnikPodaci) redirect('/login');
 
+  // LOGIKA ZA VREME I DAN
   const sad = new Date();
   const dani = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"];
-  const trenutniDan = dani[sad.getDay()];
-  const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  const trenutniDan = dani[sad.getDay()].toLowerCase().trim();
+  
+  // Dobijamo format HH:mm (npr. "13:18")
+  const trenutnoVreme = sad.toLocaleTimeString('sr-RS', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false,
+    timeZone: 'Europe/Belgrade' 
+  });
 
   const rezultatiIzBaze = await db
     .select({
@@ -56,66 +64,53 @@ export default async function KalendarPage({
       <main className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-black text-slate-900 mb-8 tracking-tighter uppercase">Raspored Nastave</h1>
 
+        {/* NOTIFIKACIJE */}
         <div className="mb-8 space-y-4">
           {success === "attended" && (
-            <div className="bg-emerald-500 text-white p-5 rounded-[2rem] shadow-xl shadow-emerald-100 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 transition-all">
-              <div className="bg-white/20 p-2 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1">Sistem potvrđuje</p>
-                <p className="text-sm font-bold opacity-95">Tvoje prisustvo je uspešno evidentirano!</p>
-              </div>
+            <div className="bg-emerald-500 text-white p-5 rounded-[2rem] shadow-xl flex items-center gap-4">
+              <span className="text-xl">✅</span>
+              <p className="font-bold uppercase text-xs tracking-tight">Prisustvo evidentirano!</p>
             </div>
           )}
-
           {error === "not_in_time" && (
-            <div className="bg-amber-500 text-white p-5 rounded-[2rem] shadow-xl shadow-amber-100 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+            <div className="bg-amber-500 text-white p-5 rounded-[2rem] shadow-xl flex items-center gap-4">
               <span className="text-xl">⏰</span>
-              <div>
-                <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1">Pristup odbijen</p>
-                <p className="text-sm font-bold opacity-90">Evidencija nije moguća: Predavanje nije trenutno u toku!</p>
-              </div>
-            </div>
-          )}
-
-          {error === "database_error" && (
-            <div className="bg-red-500 text-white p-5 rounded-[2rem] shadow-xl shadow-red-100 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
-              <span className="text-xl">❌</span>
-              <div>
-                <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1">Greška</p>
-                <p className="text-sm font-bold opacity-90">Došlo je do greške prilikom upisa ili ste se već prijavili.</p>
-              </div>
+              <p className="font-bold uppercase text-xs tracking-tight">Predavanje nije u toku!</p>
             </div>
           )}
         </div>
 
+        {/* PRETRAGA */}
         <form className="mb-12 relative">
           <input 
             name="q"
             type="text"
             defaultValue={query}
-            placeholder="Pretraži predmet (npr. Internet Tehnologije)..."
+            placeholder="Pretraži predmet..."
             className="w-full p-5 rounded-3xl border border-slate-200 shadow-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all font-bold text-slate-900"
           />
-          <button type="submit" className="absolute right-5 top-5 text-slate-400 hover:text-blue-600 transition-colors">
-            🔍
-          </button>
         </form>
 
+        {/* KARTICE */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {rezultatiIzBaze.map((termin) => {
-            const jeAktivno = termin.dan_u_nedelji === trenutniDan && 
-                             trenutnoVreme >= termin.vreme_pocetka.slice(0, 5) && 
-                             trenutnoVreme <= termin.vreme_zavrsetka.slice(0, 5);
+            // NORMALIZACIJA DANA
+            const danIzBaze = termin.dan_u_nedelji.toLowerCase().trim();
+            
+            // NORMALIZACIJA VREMENA (da isečemo sekunde npr. 13:18:03 -> 13:18)
+            const pocetak = termin.vreme_pocetka.slice(0, 5);
+            const kraj = termin.vreme_zavrsetka.slice(0, 5);
+
+            // PROVERA AKTIVNOSTI
+            const jeAktivno = danIzBaze === trenutniDan && 
+                             trenutnoVreme >= pocetak && 
+                             trenutnoVreme <= kraj;
 
             return (
               <div 
                 key={termin.id} 
-                className={`relative bg-white p-8 rounded-[2.5rem] border transition-all group flex flex-col ${
-                  jeAktivno ? 'border-blue-500 ring-4 ring-blue-50' : 'border-slate-100 hover:shadow-xl'
+                className={`relative bg-white p-8 rounded-[2.5rem] border transition-all flex flex-col ${
+                  jeAktivno ? 'border-blue-500 ring-4 ring-blue-50 shadow-2xl' : 'border-slate-100'
                 }`}
               >
                 {jeAktivno && (
@@ -130,16 +125,16 @@ export default async function KalendarPage({
                   }`}>
                     {termin.dan_u_nedelji}
                   </span>
-                  <span className="text-slate-400 text-xs font-mono font-bold bg-slate-50 px-3 py-1 rounded-lg">
-                    {termin.vreme_pocetka.slice(0, 5)} - {termin.vreme_zavrsetka.slice(0, 5)}
+                  <span className="text-slate-400 text-xs font-mono font-bold">
+                    {pocetak} - {kraj}
                   </span>
                 </div>
                 
-                <h3 className="text-2xl font-black text-slate-800 mb-3 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                <h3 className="text-2xl font-black text-slate-800 mb-3 uppercase tracking-tight">
                   {termin.naziv}
                 </h3>
                 
-                <p className="text-slate-500 text-sm mb-8 line-clamp-2 italic font-medium leading-relaxed">
+                <p className="text-slate-500 text-sm mb-8 line-clamp-2 italic font-medium">
                   {termin.opis || "Nema opisa za ovaj predmet."}
                 </p>
                 
@@ -154,13 +149,14 @@ export default async function KalendarPage({
                     <input type="hidden" name="rasporedId" value={termin.id} />
                     <button 
                       type="submit"
+                      disabled={!jeAktivno}
                       className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${
                         jeAktivno 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                        : 'bg-slate-900 text-white hover:bg-slate-800 opacity-50 cursor-not-allowed'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer' 
+                        : 'bg-slate-300 text-white opacity-50 cursor-not-allowed'
                       }`}
                     >
-                      Evidentiraj
+                      {jeAktivno ? "Evidentiraj" : "Zatvoreno"}
                     </button>
                   </form>
                 </div>
@@ -168,14 +164,6 @@ export default async function KalendarPage({
             );
           })}
         </div>
-
-        {rezultatiIzBaze.length === 0 && (
-          <div className="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-            <p className="text-slate-300 font-black uppercase tracking-[0.3em] text-xs">
-              {query ? `Nema rezultata za: "${query}"` : "Trenutno nema predmeta u bazi."}
-            </p>
-          </div>
-        )}
       </main>
     </div>
   );

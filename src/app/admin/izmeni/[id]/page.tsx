@@ -13,10 +13,10 @@ interface EditUserProps {
 }
 
 export default async function EditUserPage({ params }: EditUserProps) {
-  // 1. Dobijamo ID korisnika kojeg menjamo iz URL-a
+  // Dobijamo ID korisnika kojeg menjamo iz URL-a
   const { id } = await params;
 
-  // 2. Proveravamo ko je ulogovani admin (zbog Navbara i bezbednosti)
+  // Proveravamo ko je ulogovani admin (zbog Navbara i bezbednosti)
   const cookieStore = await cookies();
   const ulogovaniEmail = cookieStore.get('user_email')?.value;
   
@@ -25,7 +25,6 @@ export default async function EditUserPage({ params }: EditUserProps) {
   
   if (!admin || admin.role.toLowerCase() !== 'admin') redirect('/login');
 
-  // 3. KLJUČNI DEO: Dohvatamo podatke korisnika čiji je ID stigao iz URL-a
   const korisnikZaIzmenuRezultat = await db.select().from(korisnik).where(eq(korisnik.id, id)).limit(1);
   const u = korisnikZaIzmenuRezultat[0];
 

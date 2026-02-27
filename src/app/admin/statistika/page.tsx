@@ -11,25 +11,23 @@ export default async function StatistikaPage() {
   const ulogovaniEmail = cookieStore.get('user_email')?.value;
   if (!ulogovaniEmail) redirect('/login');
 
-  // 1. Podaci za Pie Chart: Broj korisnika po ulogama
+  // Podaci za Pie Chart: Broj korisnika po ulogama
   const userResults = await db.select({
     role: korisnik.role,
     count: sql`count(*)`
   }).from(korisnik).groupBy(korisnik.role);
 
-  // Rešavanje crvenila: Eksplicitno mapiranje u bilo koji niz (any)
   const userChartData: any[][] = [
     ["Uloga", "Broj korisnika"],
     ...userResults.map((r: any) => [r.role || "user", Number(r.count)])
   ];
 
-  // 2. Podaci za Bar Chart: Broj termina u rasporedu po danima
+  // Podaci za Bar Chart: Broj termina u rasporedu po danima
   const scheduleResults = await db.select({
     dan: raspored.danUNedelji,
     count: sql`count(*)`
   }).from(raspored).groupBy(raspored.danUNedelji);
 
-  // Rešavanje crvenila: Eksplicitno mapiranje u bilo koji niz (any)
   const scheduleChartData: any[][] = [
     ["Dan", "Broj termina"],
     ...scheduleResults.map((r: any) => [r.dan || "Nepoznato", Number(r.count)])
